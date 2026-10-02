@@ -4,8 +4,8 @@
 
 **Know exactly what changed inside a model before you ship it.**
 
-[![PyPI](https://img.shields.io/pypi/v/modeldiffr)](https://pypi.org/project/modeldiffr/)
-[![Python](https://img.shields.io/pypi/pyversions/modeldiffr)](https://pypi.org/project/modeldiffr/)
+[![PyPI](https://img.shields.io/pypi/v/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
+[![Python](https://img.shields.io/pypi/pyversions/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr)](LICENSE)
 
