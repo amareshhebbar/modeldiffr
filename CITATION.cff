@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use Modeldiffr, please cite it as below."
+title: "Modeldiffr: auditing what changes between base and derivative language models"
+type: software
+authors:
+  - family-names: Hebbar
+    given-names: Amaresh
+    email: hebbar.gvamaresh@gmail.com
+repository-code: "https://github.com/amareshhebbar/modeldiffr"
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-10-04
+keywords:
+  - llm
+  - model diffing
+  - interpretability
+  - evaluation
+  - ai safety

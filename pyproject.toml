@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "modeldiffr"
+version = "0.1.0"
+description = "Audit what changed between a base LLM and any fine tune, quant, merge, or edit."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
+requires-python = ">=3.10"
+authors = [{ name = "Amaresh Hebbar", email = "hebbar.gvamaresh@gmail.com" }]
+keywords = [
+  "llm",
+  "model diffing",
+  "interpretability",
+  "evaluation",
+  "ai safety",
+  "fine tuning",
+  "quantization",
+  "audit",
+  "transformers",
+]
+classifiers = [
+  "Development Status :: 2 - Pre-Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = []
+
+[project.optional-dependencies]
+hf = ["torch>=2.1", "transformers>=4.40", "accelerate>=0.30"]
+dev = ["pytest>=8.0", "ruff>=0.5", "build>=1.2", "twine>=5.0"]
+
+[project.urls]
+Homepage = "https://github.com/amareshhebbar/modeldiffr"
+Repository = "https://github.com/amareshhebbar/modeldiffr"
+Issues = "https://github.com/amareshhebbar/modeldiffr/issues"
+Changelog = "https://github.com/amareshhebbar/modeldiffr/blob/main/CHANGELOG.md"
+
+[project.scripts]
+modeldiffr = "modeldiffr.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/modeldiffr"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/modeldiffr", "tests", "README.md", "LICENSE", "NOTICE", "CHANGELOG.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/modeldiffr/report.py" = ["E501"]
