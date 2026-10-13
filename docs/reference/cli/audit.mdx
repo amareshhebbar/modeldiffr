@@ -1,0 +1,99 @@
+---
+title: "modeldiffr audit"
+description: "Compare a base model with a derivative model."
+icon: "magnifying-glass-chart"
+---
+
+```bash
+modeldiffr audit BASE DERIVATIVE [options]
+```
+
+## Arguments
+
+<ParamField path="base" type="string" required>
+  Base model. A Hugging Face model id such as `Qwen/Qwen2.5-0.5B-Instruct`, or a local path.
+</ParamField>
+
+<ParamField path="derivative" type="string" required>
+  Derivative model: a fine tune, quantized build, merge, or edited checkpoint. Model id or local path.
+</ParamField>
+
+## Options
+
+<ParamField path="--suite" type="string" default="quick">
+  Evaluation suite. Must be a registered suite name. Run `modeldiffr suites` to list them.
+</ParamField>
+
+<ParamField path="--out" type="string" default="modeldiffr_report">
+  Output directory for `report.json` and `report.html`. Created if missing. Existing reports are overwritten.
+</ParamField>
+
+<ParamField path="--device" type="string" default="auto">
+  `auto`, `cpu`, `cuda`, `cuda:0`, or `mps`. `auto` picks CUDA, then MPS, then CPU. Both models load on the same device.
+</ParamField>
+
+<ParamField path="--dtype" type="string" default="auto">
+  `auto`, `float32`, `float16`, or `bfloat16`. Applied to both models. `auto` follows each checkpoint's config.
+</ParamField>
+
+<ParamField path="--base-revision" type="string">
+  Pin the base model to a branch, tag, or commit hash.
+</ParamField>
+
+<ParamField path="--derivative-revision" type="string">
+  Pin the derivative model to a branch, tag, or commit hash.
+</ParamField>
+
+<ParamField path="--seed" type="integer" default="0">
+  Seed for the bootstrap.
+</ParamField>
+
+<ParamField path="--resamples" type="integer" default="2000">
+  Number of bootstrap resamples. More resamples give more stable interval bounds at a small CPU cost.
+</ParamField>
+
+<ParamField path="--trust-remote-code" type="flag">
+  Allow custom model code from the Hub. Applied to both models. Only enable for repositories you trust.
+</ParamField>
+
+<ParamField path="--fail-on-change" type="flag">
+  CI gate mode. Exit with code `1` when any metric changes significantly.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+```bash Basic
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune
+```
+
+```bash Pinned
+modeldiffr audit org/base org/derivative \
+  --base-revision BASE_COMMIT_SHA \
+  --derivative-revision DERIVATIVE_COMMIT_SHA \
+  --dtype bfloat16 \
+  --seed 0 \
+  --out audits/derivative_v2
+```
+
+```bash Local checkpoint
+modeldiffr audit org/base ./checkpoints/step_4000 --device cuda:0
+```
+
+```bash CI gate
+modeldiffr audit org/base ./checkpoints/candidate --fail-on-change --out audit
+```
+</CodeGroup>
+
+## Output
+
+```text
+capability_accuracy      base 0.7917  derivative 0.7500  delta -0.0417  95% CI [-0.1667, +0.0833]  within noise
+over_refusal_rate        base 0.1000  derivative 0.0000  delta -0.1000  95% CI [-0.2500, +0.0000]  within noise
+output_divergence_kl     base 0.0000  derivative 0.4120  delta +0.4120  95% CI [+0.3051, +0.5233]  CHANGED
+
+report: modeldiffr_report/report.html
+json:   modeldiffr_report/report.json
+```
+
+When a metric is skipped, a line such as `note: Skipped output divergence: the two models use different tokenizers.` is printed before the paths.

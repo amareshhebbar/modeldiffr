@@ -1,0 +1,65 @@
+---
+title: "Statistics"
+description: "Why every number carries a confidence interval, and how it is computed."
+icon: "chart-bar"
+---
+
+A score moving from 0.79 to 0.75 on 24 items says very little on its own. Modeldiffr answers the real question: **is this difference larger than what evaluation noise would produce?**
+
+## Paired bootstrap
+
+Used for `capability_accuracy` and `over_refusal_rate`. Both models answer the same items, so the analysis works on per item differences.
+
+<Steps>
+  <Step title="Compute differences">
+    For each item `i`, compute `d_i = derivative_i - base_i`.
+  </Step>
+  <Step title="Resample">
+    Draw `n` differences with replacement and take their mean. Repeat `n_resamples` times (default 2000).
+  </Step>
+  <Step title="Take percentiles">
+    Sort the resampled means. The 95% interval is the 2.5th and 97.5th percentile.
+  </Step>
+  <Step title="Decide">
+    The change is **significant** when `ci_low > 0` or `ci_high < 0`.
+  </Step>
+</Steps>
+
+Pairing matters. Item difficulty varies a lot, and pairing removes that variance from the comparison, which gives tighter intervals than comparing two independent means.
+
+## One sample bootstrap
+
+Used for `output_divergence_kl`. There is no base value to pair with, because KL is already a comparison. Modeldiffr bootstraps the per text KL values against zero and marks the change significant only when
+
+```text
+ci_low > min_effect
+```
+
+with `min_effect = 1e-3`. This keeps floating point noise between identical checkpoints from being reported.
+
+## Reproducibility
+
+The bootstrap uses Python's `random.Random(seed)`. The same seed and the same per item results always produce the same interval.
+
+```bash
+modeldiffr audit base derivative --seed 0 --resamples 2000
+```
+
+## Fields produced
+
+Every metric in `report.json` carries:
+
+| Field | Description |
+| --- | --- |
+| `n` | Number of paired items |
+| `base_mean` | Mean over base items |
+| `derivative_mean` | Mean over derivative items |
+| `delta` | Mean of differences |
+| `ci_low`, `ci_high` | Interval bounds |
+| `confidence` | Interval level, `0.95` |
+| `significant` | Whether the change is outside noise |
+| `min_effect` | Present only on one sample metrics |
+
+<Note>
+A significant result is evidence that something moved, not an explanation of why. The representational and causal layers on the [roadmap](/roadmap) exist to answer the why.
+</Note>

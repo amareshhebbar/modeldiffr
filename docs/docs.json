@@ -1,0 +1,175 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "maple",
+  "name": "Modeldiffr",
+  "description": "Audit what changed between a base LLM and any fine tune, quant, merge, or edit.",
+  "colors": {
+    "primary": "#9A5B00",
+    "light": "#E8B04A",
+    "dark": "#7A4700"
+  },
+  "favicon": "/favicon.svg",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://github.com/amareshhebbar/modeldiffr"
+  },
+  "background": {
+    "color": {
+      "light": "#FBFAF7",
+      "dark": "#141413"
+    }
+  },
+  "fonts": {
+    "family": "Inter"
+  },
+  "appearance": {
+    "default": "system"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "PyPI",
+        "href": "https://pypi.org/project/modeldiffr/"
+      },
+      {
+        "label": "Roadmap",
+        "href": "https://github.com/amareshhebbar/modeldiffr/blob/main/PLAN.md"
+      }
+    ],
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/amareshhebbar/modeldiffr"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Concepts",
+            "pages": [
+              "concepts/how_it_works",
+              "concepts/metrics",
+              "concepts/statistics",
+              "concepts/reports"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/ci_gate",
+              "guides/python_usage",
+              "guides/reproducibility",
+              "guides/custom_backend",
+              "guides/custom_suite"
+            ]
+          },
+          {
+            "group": "Project",
+            "pages": [
+              "limitations",
+              "responsible_use",
+              "roadmap",
+              "contributing",
+              "changelog"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Command line",
+            "pages": [
+              "reference/cli/overview",
+              "reference/cli/audit",
+              "reference/cli/suites"
+            ]
+          },
+          {
+            "group": "Python API",
+            "pages": [
+              "reference/python/run_audit",
+              "reference/python/hf_backend",
+              "reference/python/backend_protocol",
+              "reference/python/stats",
+              "reference/python/report",
+              "reference/python/suites",
+              "reference/python/refusal"
+            ]
+          },
+          {
+            "group": "Data formats",
+            "pages": [
+              "reference/report_schema",
+              "reference/exit_codes"
+            ]
+          }
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "icon": "github",
+          "href": "https://github.com/amareshhebbar/modeldiffr"
+        },
+        {
+          "anchor": "Issues",
+          "icon": "circle-dot",
+          "href": "https://github.com/amareshhebbar/modeldiffr/issues"
+        },
+        {
+          "anchor": "Cite",
+          "icon": "quote-right",
+          "href": "https://github.com/amareshhebbar/modeldiffr/blob/main/CITATION.cff"
+        }
+      ]
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude"
+    ]
+  },
+  "search": {
+    "prompt": "Search Modeldiffr docs"
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Modeldiffr",
+      "og:description": "Know exactly what changed inside a model before you ship it.",
+      "keywords": "llm, model diffing, evaluation, ai safety, fine tuning, quantization, audit"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/amareshhebbar/modeldiffr"
+    }
+  },
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found",
+      "description": "Try the search bar, or start from the introduction."
+    }
+  }
+}
