@@ -1,0 +1,82 @@
+---
+title: "Statistics"
+description: "paired_bootstrap and one_sample_bootstrap."
+icon: "calculator"
+---
+
+```python
+from modeldiffr import paired_bootstrap
+from modeldiffr.stats import one_sample_bootstrap
+```
+
+Pure Python, no dependencies.
+
+## paired_bootstrap
+
+```python
+paired_bootstrap(
+    base: list[float],
+    derivative: list[float],
+    n_resamples: int = 2000,
+    confidence: float = 0.95,
+    seed: int = 0,
+) -> dict
+```
+
+<ParamField path="base" type="list[float]" required>
+  Per item scores for the base model.
+</ParamField>
+
+<ParamField path="derivative" type="list[float]" required>
+  Per item scores for the derivative, aligned with `base`.
+</ParamField>
+
+<ParamField path="n_resamples" type="int" default="2000">
+  Bootstrap resamples.
+</ParamField>
+
+<ParamField path="confidence" type="float" default="0.95">
+  Interval level.
+</ParamField>
+
+<ParamField path="seed" type="int" default="0">
+  Seed for `random.Random`.
+</ParamField>
+
+**Raises** `ValueError` when the lists differ in length or are empty.
+
+**Returns**
+
+<ResponseField name="n" type="int">Number of pairs.</ResponseField>
+<ResponseField name="base_mean" type="float">Mean of `base`.</ResponseField>
+<ResponseField name="derivative_mean" type="float">Mean of `derivative`.</ResponseField>
+<ResponseField name="delta" type="float">Mean of `derivative - base`.</ResponseField>
+<ResponseField name="ci_low" type="float">Lower interval bound.</ResponseField>
+<ResponseField name="ci_high" type="float">Upper interval bound.</ResponseField>
+<ResponseField name="confidence" type="float">Interval level.</ResponseField>
+<ResponseField name="significant" type="bool">`ci_low > 0 or ci_high < 0`.</ResponseField>
+
+```python
+from modeldiffr import paired_bootstrap
+
+paired_bootstrap([1, 0, 1, 0], [1, 1, 1, 1], seed=0)
+```
+
+## one_sample_bootstrap
+
+```python
+one_sample_bootstrap(
+    values: list[float],
+    n_resamples: int = 2000,
+    confidence: float = 0.95,
+    seed: int = 0,
+    min_effect: float = 0.0,
+) -> dict
+```
+
+Bootstraps `values` against zero. Returns the same fields as `paired_bootstrap`, with `base_mean` equal to `0.0`, plus:
+
+<ResponseField name="min_effect" type="float">The threshold that was applied.</ResponseField>
+<ResponseField name="significant" type="bool">`ci_low > min_effect`. Only an increase above the threshold counts.</ResponseField>
+
+Used for `output_divergence_kl` with `min_effect=1e-3`.
