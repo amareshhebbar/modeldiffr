@@ -1,0 +1,64 @@
+---
+title: "Reports"
+description: "write_reports and render_html."
+icon: "file-export"
+---
+
+```python
+from modeldiffr.report import render_html, write_reports
+```
+
+Standard library only.
+
+## write_reports
+
+```python
+write_reports(result: dict, out_dir: str | Path) -> tuple[Path, Path]
+```
+
+<ParamField path="result" type="dict" required>
+  The dict returned by `run_audit`.
+</ParamField>
+
+<ParamField path="out_dir" type="str | Path" required>
+  Directory to write into. Created with parents if missing.
+</ParamField>
+
+**Returns** `(json_path, html_path)`, pointing at `report.json` and `report.html`.
+
+JSON is written with two space indentation and `ensure_ascii=False`, encoded as UTF8.
+
+```python
+json_path, html_path = write_reports(result, "audit")
+```
+
+## render_html
+
+```python
+render_html(result: dict) -> str
+```
+
+Returns the full HTML document as a string, without writing to disk. Useful for embedding in a notebook or a web service.
+
+```python
+from IPython.display import HTML
+
+from modeldiffr.report import render_html
+
+HTML(render_html(result))
+```
+
+All user and model text is escaped. The page has no external assets and supports light and dark color schemes.
+
+## Rerendering an old report
+
+The HTML is derived entirely from the JSON, so you can rebuild it at any time:
+
+```python
+import json
+
+from modeldiffr.report import render_html
+
+result = json.load(open("audit/report.json"))
+open("audit/report.html", "w").write(render_html(result))
+```

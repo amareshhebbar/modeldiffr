@@ -1,0 +1,65 @@
+---
+title: "Reports"
+description: "The HTML and JSON outputs of every audit."
+icon: "file-lines"
+---
+
+Every audit writes two files into the `--out` directory (default `modeldiffr_report`). The directory is created if it does not exist.
+
+```text
+modeldiffr_report/
+  report.html
+  report.json
+```
+
+## report.html
+
+A single self contained page with no external assets. It follows the system light or dark theme and works offline, as a CI artifact, or attached to a pull request.
+
+| Section | Contents |
+| --- | --- |
+| Header | Base and derivative ids, suite name, creation timestamp |
+| Headline | `Significant change in: ...` or `No significant change detected`, plus resampling settings |
+| Metrics | Base, derivative, delta, 95% CI, and a verdict tag per metric |
+| Models | Metadata cards for both models: revision, architecture, parameter count, dtype, device, chat template presence |
+| Item details | Collapsible tables of every capability item and every over refusal prompt, side by side |
+| Notes | Suite notes, skipped metric notes, versions, wall time, Python version |
+
+## report.json
+
+The full machine readable result. Use it to diff audits over time, render your own dashboards, or gate CI on a specific metric.
+
+```json
+{
+  "schema_version": "0.1",
+  "modeldiffr_version": "0.1.0",
+  "created_at": "2026-10-13T06:30:00+00:00",
+  "suite": { "name": "quick", "notes": ["..."] },
+  "settings": { "seed": 0, "n_resamples": 2000, "max_new_tokens": 64 },
+  "environment": { "python": "3.11.9", "platform": "Linux-..." },
+  "base": { "model_id": "...", "revision": "...", "architecture": "...", "parameters": 494032768, "dtype": "torch.bfloat16", "device": "cuda", "has_chat_template": true },
+  "derivative": { "...": "..." },
+  "metrics": [ { "name": "capability_accuracy", "...": "..." } ],
+  "verdict": { "changed": ["output_divergence_kl"], "any_change": true },
+  "notes": [],
+  "items": { "capability": {}, "over_refusal": {}, "divergence": [] },
+  "wall_time_seconds": 41.27
+}
+```
+
+The complete field list is in the [report schema reference](/reference/report_schema).
+
+## Reading a report in CI
+
+```python
+import json
+import sys
+
+report = json.load(open("audit/report.json"))
+metrics = {m["name"]: m for m in report["metrics"]}
+cap = metrics["capability_accuracy"]
+if cap["significant"] and cap["delta"] < 0:
+    sys.exit(1)
+```
+
+This needs only the core package, or no package at all.
