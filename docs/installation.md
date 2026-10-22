@@ -21,6 +21,27 @@ Install Modeldiffr from PyPI or from source.
     ```
     The `hf` extra installs `torch>=2.1`, `transformers>=4.40`, `accelerate>=0.30` and `huggingface_hub`. Use this to run audits.
 
+=== "Standard benchmarks"
+
+    ```bash
+    pip install "modeldiffr[hf,tasks]"
+    ```
+    Adds `datasets` for the `lite`, `standard` and `full` suites.
+
+=== "vLLM or llama.cpp"
+
+    ```bash
+    pip install "modeldiffr[vllm]"
+    pip install "modeldiffr[hf,llamacpp]"
+    ```
+    See [Backends](guides/backends.md).
+
+=== "Everything"
+
+    ```bash
+    pip install "modeldiffr[all]"
+    ```
+
 === "Verify reports only"
 
     ```bash
@@ -51,7 +72,7 @@ cd modeldiffr
 pip install -e ".[hf,dev]"
 ```
 
-The `dev` extra adds `pytest`, `ruff`, `build`, `twine`, `jsonschema`, `numpy` and `safetensors`.
+The `dev` extra adds `pytest`, `ruff`, `build`, `twine`, `jsonschema`, `numpy`, `safetensors` and `gguf`.
 
 ## Verify
 

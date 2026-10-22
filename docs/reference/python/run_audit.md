@@ -44,9 +44,9 @@ The model under audit.
 
 #### `suite`
 
-*Suite*, required
+*Suite or TaskSuite*, required
 
-Items to evaluate. Get a built in one with `get_suite("quick")`.
+Items to evaluate. `get_suite("quick")` for the built in suite, or `task_suite("standard", only=["mmlu"], limit=100)` from `modeldiffr.tasks` for benchmark suites.
 
 #### `seed`
 
@@ -71,6 +71,36 @@ Called with a short message at each stage. Defaults to a no op.
 *str*, default `"auto"`
 
 `auto`, `base`, `derivative` or `own`. Which chat template renders generation prompts. See [comparable prompts](../../concepts/proof.md#comparable-prompts).
+
+#### `refusal_detector`
+
+*object*, default keyword detector
+
+From `modeldiffr.tasks.refusal.make_detector("keyword" or "hf:MODEL_ID")`.
+
+#### `allow_code_execution`
+
+*bool*, default `False`
+
+Run `humaneval`. Also enabled when the suite was built with `task_suite(..., allow_code_execution=True)`.
+
+#### `data_dir`
+
+*str*, default `None`
+
+Folder with `TASK.jsonl` files; nothing is downloaded when set.
+
+#### `fdr_q`
+
+*float*, default `0.05`
+
+False discovery rate across metrics.
+
+#### `estimate`
+
+*bool*, default `False`
+
+Time a few calls and store the expected run time in `plan.estimated_seconds`.
 
 #### `hash_weights`
 

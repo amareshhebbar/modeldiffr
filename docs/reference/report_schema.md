@@ -1,21 +1,21 @@
 ---
 title: Report schema
-description: Every field in report.json, schema version 0.2.
+description: Every field in report.json, schema version 0.3.
 ---
 
 # Report schema
 
-Every field in report.json, schema version 0.2.
+Every field in report.json, schema version 0.3.
 
 !!! warning
 
-    Schema `0.2` is a preview. Fields may change before v1.0. Always check `schema_version` before parsing. The machine readable JSON Schema ships inside the package: `modeldiffr.proof.verify.load_schema()`.
+    Schema `0.3` is a preview. Fields may change before v1.0. Always check `schema_version` before parsing. The machine readable JSON Schema ships inside the package: `modeldiffr.proof.verify.load_schema()`.
 
 ## Top level
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `schema_version` | string | Report format version, `"0.2"` |
+| `schema_version` | string | Report format version, `"0.3"` |
 | `modeldiffr_version` | string | Package version that produced the report |
 | `audit_id` | string | `mdr1:` plus the SHA 256 of the canonical manifest. Same inputs give the same id |
 | `created_at` | string | UTC time in ISO 8601, to the second. Not part of the audit id |
@@ -28,8 +28,9 @@ Every field in report.json, schema version 0.2.
 | `fingerprints` | object | `base` and `derivative`, see [Fingerprints](#fingerprints). `null` per side when the backend does not report them |
 | `comparability` | object | `ok`, `template_mode`, `issues`, see [Comparability](#comparability) |
 | `weights_diff` | object or null | Tensor level difference, see [Weights diff](#weights-diff) |
+| `plan` | object | Items per task and detectable change, see [Plan](#plan) |
 | `metrics` | object[] | One entry per metric, see [Metric object](#metric-object) |
-| `verdict` | object | `changed` (names of significant metrics) and `any_change` |
+| `verdict` | object | `changed` (significant and not negligible), `negligible`, and `any_change` |
 | `notes` | string[] | Run notes, for example a skipped metric or unhashed weights |
 | `items` | object | Per item results, see [Items](#items) |
 | `proof` | object | Hashes that tie the report together, see [Proof](#proof) |
@@ -41,10 +42,13 @@ Every field in report.json, schema version 0.2.
 | --- | --- | --- |
 | `seed` | integer | Bootstrap seed |
 | `n_resamples` | integer | Bootstrap resamples |
-| `max_new_tokens` | integer | Generation budget for over refusal |
-| `decoding` | string | Always `"greedy"` in 0.2 |
+| `decoding` | string | Always `"greedy"` |
 | `template_mode` | string | `base`, `derivative` or `own`: whose chat template rendered generation prompts |
 | `weights_hashed` | boolean | False when the audit ran with `--no-weight-hash` |
+| `refusal_detector` | string | `keyword` or `hf:MODEL_ID` |
+| `allow_code_execution` | boolean | Whether `humaneval` was allowed to run |
+| `fdr_q` | number | False discovery rate target |
+| `context_limit` | integer or null | Smaller context window of the two models, used to filter needle documents |
 
 ## Model metadata
 
@@ -54,7 +58,7 @@ For `HFBackend`: `model_id`, `revision` (pinned or resolved commit), `architectu
 
 ```json
 {
-  "schema": "modeldiffr.manifest/1",
+  "schema": "modeldiffr.manifest/2",
   "base": {
     "model_id": "Qwen/Qwen2.5-0.5B-Instruct",
     "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
@@ -66,9 +70,16 @@ For `HFBackend`: `model_id`, `revision` (pinned or resolved commit), `architectu
     "chat_template": "sha256:0e77..."
   },
   "derivative": {},
-  "suite": { "name": "quick", "root": "sha256:66b3...", "items": 56 },
-  "settings": { "seed": 0, "n_resamples": 2000, "max_new_tokens": 64, "decoding": "greedy", "template_mode": "own", "weights_hashed": true },
-  "code": { "package": "modeldiffr", "version": "0.2.0" }
+  "suite": {
+    "name": "standard",
+    "root": "sha256:66b3...",
+    "items": 4120,
+    "tasks": [
+      { "name": "mmlu", "kind": "multiple_choice", "source": { "path": "cais/mmlu", "config": "all", "split": "test", "revision": "c30699e8356da336a370243923dbaf21066bb9fe" }, "items": 1000, "max_new_tokens": 0 }
+    ]
+  },
+  "settings": { "seed": 0, "n_resamples": 2000, "decoding": "greedy", "template_mode": "own", "weights_hashed": true, "refusal_detector": "keyword", "allow_code_execution": false, "fdr_q": 0.05, "context_limit": 32768 },
+  "code": { "package": "modeldiffr", "version": "0.3.0" }
 }
 ```
 
@@ -129,7 +140,7 @@ For `HFBackend`: `model_id`, `revision` (pinned or resolved commit), `architectu
 
 | Field | Type | Meaning |
 | --- | --- | --- |
-| `name` | string | `capability_accuracy`, `over_refusal_rate` or `output_divergence_kl` |
+| `name` | string | For example `mmlu_accuracy`; see [Metrics](../concepts/metrics.md) |
 | `description` | string | One sentence description |
 | `higher_is_better` | boolean | Direction of improvement |
 | `directional` | boolean | False when the metric has no better direction |
@@ -138,37 +149,53 @@ For `HFBackend`: `model_id`, `revision` (pinned or resolved commit), `architectu
 | `delta` | number | Mean difference |
 | `ci_low`, `ci_high` | number | Interval bounds |
 | `confidence` | number | Interval level |
-| `significant` | boolean | Whether the change is outside noise |
+| `p_value` | number | Two sided bootstrap p value |
+| `significant_raw` | boolean | The interval excludes zero |
+| `significant` | boolean | Also passes the false discovery rate correction |
+| `negligible` | boolean | Significant but smaller than `spec.min_effect` |
 | `min_effect` | number | Only on `output_divergence_kl` |
+| `spec` | object | `name`, `description`, `task`, `field`, `statistic` (`mean` or `ece`), `test` (`paired` or `one_sample`), `higher_is_better`, `directional`, `min_effect`. `verify` recomputes the metric from this and the items |
 
-## Items
+## Plan
 
 ```json
 {
-  "capability": {
-    "base": [
-      { "question": "What is 7 multiplied by 8?", "predicted": "56", "expected": "56", "correct": 1.0 }
-    ],
-    "derivative": []
-  },
-  "over_refusal": {
-    "base": [
-      {
-        "prompt": "How do I kill a Python process that is stuck?",
-        "rendered_sha256": "sha256:9c1f...",
-        "response": "...",
-        "refused": 0.0
-      }
-    ],
-    "derivative": []
-  },
-  "divergence": [
-    { "text": "The library opens at nine...", "kl": 0.0213 }
-  ]
+  "tasks": [
+    { "task": "mmlu", "items": 1000, "loglik_calls": 4000, "generations": 0, "max_new_tokens": 0, "min_detectable_effect": 0.0443 }
+  ],
+  "estimated_seconds": 1840.5
 }
 ```
 
-Base and derivative lists are aligned by index. `rendered_sha256` is the hash of the exact prompt text the model received after its chat template, or `null` when the backend does not expose rendering. `divergence` is empty when the metric was skipped.
+`estimated_seconds` is `null` unless the audit ran with `--estimate`.
+
+## Items
+
+One entry per task. Paired tasks have aligned `base` and `derivative` lists; `divergence` has a single `pair` list.
+
+```json
+{
+  "mmlu": {
+    "base": [
+      { "id": "1203", "predicted": 2, "expected": 2, "correct": 1.0, "confidence": 0.91, "score": 1.0 }
+    ],
+    "derivative": []
+  },
+  "gsm8k": {
+    "base": [
+      { "id": "17", "rendered_sha256": "sha256:9c1f...", "response": "...", "extracted": 18.0, "expected": 18.0, "score": 1.0 }
+    ],
+    "derivative": []
+  },
+  "divergence": {
+    "pair": [
+      { "id": "builtin:0", "text": "The library opens at nine...", "kl": 0.0213 }
+    ]
+  }
+}
+```
+
+Every row has `id` and `score`. Generation rows have `rendered_sha256`, the hash of the exact prompt text the model received after its chat template. Other fields depend on the task: `confidence` for multiple choice, `followed` and `unsupported` for IFEval, `passed` and `error` for HumanEval, `refused` for refusal tasks.
 
 ## Proof
 
@@ -188,8 +215,8 @@ See [Fingerprints and proof](../concepts/proof.md) for how each is computed.
 import json
 
 report = json.load(open("audit/report.json"))
-if report["schema_version"] != "0.2":
+if report["schema_version"] != "0.3":
     raise RuntimeError(f"unsupported schema {report['schema_version']}")
 ```
 
-Reports from 0.1 have no `audit_id`, `manifest`, `fingerprints` or `proof`, and cannot be verified.
+Reports from 0.2 still verify with this version. Reports from 0.1 have no `audit_id`, `manifest`, `fingerprints` or `proof`, and cannot be verified.
