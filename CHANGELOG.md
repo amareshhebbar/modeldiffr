@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.5.0 (October 2026)
+
+Phase 4: public audits, tooling.
+
+### Added
+
+* `modeldiffr controls make`: identity, noise, scale, zero and pruning controls written from safetensors shards, seeded and recorded in `modeldiffr_control.json`.
+* `modeldiffr batch`: many audits from YAML or JSON, resume, `--only`, `--dry-run`, controls made on the fly, scored detection and false positive rates in `index.json`.
+* `modeldiffr registry build`: a static site that lists verified audits and recomputes audit ids, Merkle roots, statement hashes and Ed25519 signatures in the browser.
+* `examples/public_audits.yaml` and `examples/controls.yaml`.
+* Extra `batch`.
+
 ## 0.4.0 (October 2026)
 
 Phase 3: proof, signing and integrations.
