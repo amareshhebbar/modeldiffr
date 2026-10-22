@@ -101,6 +101,9 @@ nav:
           - guides/signing.md
           - guides/anchoring.md
           - guides/publishing.md
+          - guides/controls.md
+          - guides/batch.md
+          - guides/registry.md
           - guides/backends.md
           - guides/colab.md
           - guides/python_usage.md
@@ -120,6 +123,7 @@ nav:
           - reference/cli/verify.md
           - reference/cli/fingerprint.md
           - reference/cli/attest.md
+          - reference/cli/batch.md
           - reference/cli/suites.md
           - reference/cli/other.md
       - Python API:
