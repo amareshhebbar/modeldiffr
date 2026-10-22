@@ -70,6 +70,17 @@ Progress lines go to stderr, so stdout stays clean for piping:
 [modeldiffr] output divergence: computing KL on neutral text
 ```
 
+## Run real benchmarks
+
+The `quick` suite is a smoke test. For a release decision, run the standard benchmarks:
+
+```bash
+pip install "modeldiffr[hf,tasks]"
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --suite lite
+```
+
+See [Suites and tasks](concepts/suites.md), or [run it on a free Colab GPU](guides/colab.md).
+
 ## Next steps
 
 <div class="grid cards" markdown>

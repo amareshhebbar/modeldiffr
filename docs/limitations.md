@@ -49,3 +49,13 @@ A significant change is evidence that something moved, not an explanation of why
 * GGUF files are not fingerprinted yet; they arrive with the llama.cpp backend.
 * Fingerprinting reads every weight file once. For very large models, `--no-weight-hash` skips it, and the report then says so.
 * Rerunning on different hardware can change log probabilities in the last digits, so `results_root` can differ while `audit_id` stays the same.
+
+## Benchmarks and backends
+
+* The vLLM and llama.cpp backends are tested in CI against stand in engines, not real GPUs. Please report anything that behaves differently on real hardware.
+* Hosted APIs rarely return prompt log probabilities, so multiple choice tasks need the `hf`, `vllm` or `llamacpp` backends or a vLLM server.
+* The default refusal detector is keyword based. Measure it, or a classifier, on your own labeled responses with `modeldiffr refusal-eval` before relying on refusal metrics.
+* IFEval checks are reimplemented and strict only; `language:response_language` needs `langdetect`.
+* `humaneval` runs model written code with resource limits but without network isolation.
+* Power estimates assume a correlation of 0.5 between the two models' per item results.
+

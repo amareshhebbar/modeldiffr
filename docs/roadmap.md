@@ -12,9 +12,9 @@ Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
 | Phase | Release | Status |
 | --- | --- | --- |
 | 0. Foundation | 0.1 | Shipped |
-| 1. Trustworthy core | 0.2 | **Shipped** |
-| 2. Behavioral layer MVP | 0.3 | Next |
-| 3. Proof, signing and integrations | 0.4 | Planned |
+| 1. Trustworthy core | 0.2 | Shipped |
+| 2. Behavioral layer MVP | 0.3 | **Shipped** |
+| 3. Proof, signing and integrations | 0.4 | Next |
 | 4. Public audits and launch | 0.5 | Planned |
 | 5. Representational layer | 0.6 | Planned |
 | 6. Causal layer | 0.7 | Planned |
@@ -61,21 +61,25 @@ Every report is reproducible and provably refers to exact models.
 
 See [Fingerprints and proof](concepts/proof.md).
 
-## Phase 2: Behavioral layer MVP (0.3, next)
+## Phase 2: Behavioral layer MVP (0.3, shipped)
 
 A behavioral audit people would use for a release decision.
 
-* [ ] Suite registry with pinned datasets, item hashes and quick, standard and full sizes
+* [x] Suite registry with pinned datasets, item hashes, and `lite`, `standard` and `full` sizes; the built in `quick` suite kept
+* [x] Tasks: MMLU, ARC Challenge, HellaSwag, TruthfulQA MC1, GSM8K, MGSM in ten languages, IFEval, XSTest safe and unsafe, OR Bench hard and toxic, HumanEval in a limited subprocess, long context needle, output divergence
+* [x] Deterministic, nested item sampling, and offline data folders
+* [x] Batched transformers backend, vLLM backend, llama.cpp backend for GGUF builds, OpenAI compatible API backend, and a different backend per model
+* [x] GGUF fingerprints from quantized bytes, checked against the reference type table
+* [x] Pluggable refusal detectors (keyword or any Hugging Face classifier) and `modeldiffr refusal-eval`
+* [x] Harmful compliance and calibration (expected calibration error) metrics
+* [x] Bootstrap p values, Benjamini Hochberg correction across metrics, minimum effect sizes and a negligible verdict
+* [x] Power estimate for every task before running, `modeldiffr power`, and a run time estimate from timed calls
+* [x] Colab notebook for the `lite` suite on a free GPU
+* [x] Reports from 0.2 still verify
 * [ ] Adapters for EleutherAI lm evaluation harness and UK AISI Inspect tasks
-* [ ] Suites: MMLU, ARC, HellaSwag, GSM8K, IFEval, XSTest and OR Bench, HarmBench or StrongREJECT, TruthfulQA, MGSM, HumanEval, long context needle
-* [ ] vLLM backend for 7B to 32B models
-* [ ] llama.cpp backend for GGUF quantized models, with GGUF fingerprints
-* [ ] OpenAI compatible API backend for behavioral metrics
-* [ ] Small validated refusal classifier, with its accuracy in every report
-* [ ] Harmful compliance and calibration (expected calibration error) metrics
-* [ ] Benjamini Hochberg correction across metrics, minimum effect sizes, and a power estimate before running
-* [ ] GPU hour estimate printed before an audit starts
-* [ ] Colab notebook for the quick suite on a free GPU
+* [ ] A default refusal classifier validated on a published labeled set, with its accuracy in every report
+* [ ] Measured GPU hours per suite on common GPUs, published here
+* [ ] vLLM and llama.cpp backends exercised on real hardware in CI
 
 ## Phase 3: Proof, signing and integrations (0.4)
 

@@ -14,7 +14,7 @@ modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune
 
 !!! note
 
-    **Early preview (v0.2), Phase 1 shipped.** The behavioral layer works with a small built in smoke suite, and every report is now fingerprinted and verifiable. Standard benchmark suites, signing, representational diffing and causal checks are on the [roadmap](roadmap.md). Expect the report schema to change before v1.0.
+    **Early preview (v0.3), Phases 1 and 2 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context, four backends including GGUF, and every report fingerprinted and verifiable. Signing, representational diffing and causal checks are on the [roadmap](roadmap.md). Expect the report schema to change before v1.0.
 
 ## Why Modeldiffr
 

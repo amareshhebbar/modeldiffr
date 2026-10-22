@@ -75,3 +75,21 @@ get_suite("quick")
 ## QUICK
 
 The built in smoke suite: 24 capability items, 20 benign prompts, 12 neutral texts, `max_new_tokens=64`.
+
+## Benchmark suites
+
+The `lite`, `standard` and `full` suites are built from tasks:
+
+```python
+from modeldiffr.tasks import build_tasks, task_suite
+
+suite = task_suite("standard", only=["mmlu", "gsm8k"], limit=200, allow_code_execution=False)
+for task, size in suite.entries:
+    print(task.name, size, [m.name for m in task.metrics])
+
+tasks = build_tasks()
+items = tasks["mmlu"].load()
+```
+
+`task_suite(name, only=None, limit=None, allow_code_execution=False)` returns a `TaskSuite` that `run_audit` accepts in place of a `Suite`. Passing a built in suite name such as `quick` wraps it as tasks. Each `Task` has `name`, `kind`, `metrics`, `source` and `max_new_tokens`, `load(data_dir=None)` returns its items, and `run(backend, items, ctx)` returns per item rows. See [Suites and tasks](../../concepts/suites.md).
+

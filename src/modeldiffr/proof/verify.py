@@ -3,12 +3,12 @@ import math
 from importlib import resources
 from pathlib import Path
 
+from modeldiffr.proof.legacy import metrics_v02, results_root_v02, suite_root_v02
 from modeldiffr.proof.manifest import (
     audit_id,
     model_entry,
     results_root,
     statement_hash,
-    suite_root,
 )
 
 TOLERANCE = 1e-12
@@ -19,8 +19,12 @@ def _check(name: str, status: str, detail: str) -> dict:
     return {"name": name, "status": status, "detail": detail}
 
 
-def load_schema() -> dict:
-    text = resources.files("modeldiffr.schema").joinpath("report.schema.json").read_text("utf-8")
+SUPPORTED = ("0.2", "0.3")
+
+
+def load_schema(version: str = "0.3") -> dict:
+    name = "report.schema.json" if version == "0.3" else f"report-{version}.schema.json"
+    text = resources.files("modeldiffr.schema").joinpath(name).read_text("utf-8")
     return json.loads(text)
 
 
@@ -33,8 +37,12 @@ def _schema(report: dict) -> dict:
         if missing:
             return _check("schema", "fail", f"missing fields: {', '.join(missing)}")
         return _check("schema", "pass", "required fields present (install jsonschema for full)")
+    version = report.get("schema_version")
+    if version not in SUPPORTED:
+        return _check("schema", "fail", f"schema {version} is not supported by this version")
     errors = sorted(
-        jsonschema.Draft202012Validator(load_schema()).iter_errors(report), key=lambda e: e.path
+        jsonschema.Draft202012Validator(load_schema(version)).iter_errors(report),
+        key=lambda e: list(e.path),
     )
     if errors:
         e = errors[0]
@@ -52,16 +60,29 @@ def _close(a, b) -> bool:
 
 
 def _metrics(report: dict) -> dict:
-    from modeldiffr.audit import metrics_from_items
+    from modeldiffr.metrics import FDR_Q, compute_metrics
 
     s = report["settings"]
-    again = metrics_from_items(report["items"], seed=s["seed"], n_resamples=s["n_resamples"])
+    if report["schema_version"] == "0.2":
+        again = metrics_v02(report["items"], seed=s["seed"], n_resamples=s["n_resamples"])
+    else:
+        specs = [m["spec"] for m in report["metrics"]]
+        again = compute_metrics(
+            report["items"],
+            specs,
+            seed=s["seed"],
+            n_resamples=s["n_resamples"],
+            q=s.get("fdr_q", FDR_Q),
+        )
     have = {m["name"]: m for m in report["metrics"]}
     if set(have) != {m["name"] for m in again}:
         return _check("metrics", "fail", "the set of metrics does not match the items")
+    keys = _NUMERIC + ("significant",)
+    if report["schema_version"] != "0.2":
+        keys += ("p_value", "significant_raw", "negligible")
     for m in again:
         r = have[m["name"]]
-        for key in _NUMERIC + ("significant",):
+        for key in keys:
             if not _close(r.get(key), m.get(key)):
                 return _check(
                     "metrics", "fail", f"{m['name']}.{key} is {r.get(key)}, items give {m.get(key)}"
@@ -126,9 +147,62 @@ def _models(report: dict, progress) -> list[dict]:
     return out
 
 
-def verify_report(report: dict, check_models: bool = False, progress=lambda _: None) -> dict:
+def _suite(report: dict, suite_data) -> dict:
     from modeldiffr.suites import SUITES
 
+    manifest = report["manifest"]
+    name = manifest["suite"]["name"]
+    want = manifest["suite"]["root"]
+    if want != report["proof"]["suite_root"]:
+        return _check("suite", "fail", "the proof and the manifest name different suites")
+    if report["schema_version"] == "0.2":
+        suite = SUITES.get(name)
+        if suite is None:
+            return _check("suite", "skip", "custom suite, items are not bundled")
+        root = suite_root_v02(suite)
+    else:
+        from modeldiffr.proof.manifest import suite_root
+        from modeldiffr.tasks.base import select
+        from modeldiffr.tasks.registry import build_tasks, task_suite
+
+        tasks_meta = manifest["suite"]["tasks"]
+        builtin = all(t["source"]["path"] == "builtin" for t in tasks_meta)
+        from modeldiffr.tasks.registry import SIZES
+
+        if (
+            name not in SUITES
+            and name not in SIZES
+            and any(
+                t["source"]["path"] == "builtin" and t["kind"] != "divergence" for t in tasks_meta
+            )
+        ):
+            return _check("suite", "skip", "custom suite, items are not bundled")
+        if not builtin and suite_data is None:
+            return _check("suite", "skip", "dataset suite, pass --suite-data to rebuild it")
+        try:
+            if name in SUITES:
+                registry = {t.name: t for t, _ in task_suite(name).entries}
+            else:
+                registry = build_tasks()
+            loaded = []
+            for meta in tasks_meta:
+                task = registry[meta["name"]]
+                items = task.load(None if suite_data in (None, "hub") else suite_data)
+                limit = report["settings"].get("context_limit")
+                if task.name == "needle" and limit:
+                    items = [it for it in items if it.data["words"] * 1.6 + 64 < limit]
+                loaded.append((task, select(task.name, items, meta["items"])))
+        except Exception as exc:
+            return _check("suite", "fail", f"could not rebuild the suite: {exc}")
+        root = suite_root(loaded)
+    ok = root == want
+    detail = "matches the rebuilt suite" if ok else f"rebuilt suite hashes to {root}"
+    return _check("suite", "pass" if ok else "fail", detail)
+
+
+def verify_report(
+    report: dict, check_models: bool = False, progress=lambda _: None, suite_data=None
+) -> dict:
     checks = [_schema(report)]
     if checks[0]["status"] == "fail":
         return {"ok": False, "audit_id": report.get("audit_id"), "checks": checks}
@@ -151,24 +225,24 @@ def verify_report(report: dict, check_models: bool = False, progress=lambda _: N
             else "settings or fingerprints differ from the manifest",
         )
     )
-    suite = SUITES.get(manifest["suite"]["name"])
-    if suite is None:
-        checks.append(_check("suite", "skip", "custom suite, items are not bundled"))
-    else:
-        root = suite_root(suite)
-        ok = root == manifest["suite"]["root"] == report["proof"]["suite_root"]
-        detail = "matches the built in suite" if ok else f"built in suite hashes to {root}"
-        checks.append(_check("suite", "pass" if ok else "fail", detail))
-    root = results_root(report["items"])
+    checks.append(_suite(report, suite_data))
+    legacy = report["schema_version"] == "0.2"
+    root = results_root_v02(report["items"]) if legacy else results_root(report["items"])
     ok = root == report["proof"]["results_root"]
     checks.append(
         _check("results_root", "pass" if ok else "fail", root if ok else "items were changed")
     )
     checks.append(_metrics(report))
-    changed = [m["name"] for m in report["metrics"] if m["significant"]]
-    ok = changed == report["verdict"]["changed"] and report["verdict"]["any_change"] == bool(
-        changed
-    )
+    if legacy:
+        changed = [m["name"] for m in report["metrics"] if m["significant"]]
+        ok = changed == report["verdict"]["changed"]
+    else:
+        from modeldiffr.metrics import verdict
+
+        expected = verdict(report["metrics"])
+        changed = expected["changed"]
+        ok = expected == report["verdict"]
+    ok = ok and report["verdict"]["any_change"] == bool(changed)
     checks.append(_check("verdict", "pass" if ok else "fail", ", ".join(changed) or "no change"))
     checks += _weights(report)
     ok = statement_hash(report) == report["proof"].get("statement_sha256")
@@ -182,6 +256,10 @@ def verify_report(report: dict, check_models: bool = False, progress=lambda _: N
     }
 
 
-def verify_file(path: str | Path, check_models: bool = False, progress=lambda _: None) -> dict:
+def verify_file(
+    path: str | Path, check_models: bool = False, progress=lambda _: None, suite_data=None
+) -> dict:
     report = json.loads(Path(path).read_text(encoding="utf-8"))
-    return verify_report(report, check_models=check_models, progress=progress)
+    return verify_report(
+        report, check_models=check_models, progress=progress, suite_data=suite_data
+    )

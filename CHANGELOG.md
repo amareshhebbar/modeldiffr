@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.3.0 (October 2026)
+
+Phase 2: behavioral layer.
+
+### Added
+
+* Suites `lite`, `standard` and `full` over thirteen tasks with pinned datasets: MMLU, ARC Challenge, HellaSwag, TruthfulQA MC1, GSM8K, MGSM, IFEval, XSTest safe and unsafe, OR Bench hard and toxic, HumanEval, long context needle, output divergence.
+* Deterministic nested sampling, `--tasks`, `--limit`, offline `--data-dir`.
+* Calibration error, harmful compliance, IFEval (25 instruction types), HumanEval behind `--allow-code-execution`.
+* Refusal detectors (`--refusal-detector`) and `modeldiffr refusal-eval`.
+* P values, Benjamini Hochberg correction (`--fdr`), minimum effects and a `negligible` verdict.
+* Plan with detectable change per task, `--plan-only`, `--estimate`, `modeldiffr power`.
+* Backends: batched transformers, vLLM, llama.cpp with GGUF fingerprints, OpenAI compatible APIs, per model.
+* `modeldiffr tasks`, `verify --suite-data`, Colab notebook, extras `tasks`, `vllm`, `llamacpp`, `all`.
+
+### Changed
+
+* Report schema 0.3 and manifest schema 2. Reports from 0.2 still verify.
+
 ## 0.2.0 (October 2026)
 
 Phase 1: trustworthy core.

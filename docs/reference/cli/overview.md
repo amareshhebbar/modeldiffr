@@ -8,7 +8,7 @@ description: The modeldiffr command.
 The modeldiffr command.
 
 ```text
-usage: modeldiffr [-h] [--version] {audit,suites,verify,fingerprint} ...
+usage: modeldiffr [-h] [--version] {audit,suites,tasks,power,refusal-eval,verify,fingerprint} ...
 
 Audit what changed between a base LLM and a derivative model.
 ```
@@ -19,6 +19,9 @@ Audit what changed between a base LLM and a derivative model.
 | [`verify`](verify.md) | Check that a report was not edited and matches the real model files |
 | [`fingerprint`](fingerprint.md) | Print content hashes for one model |
 | [`suites`](suites.md) | List available suites |
+| [`tasks`](other.md#tasks) | List tasks with their pinned datasets |
+| [`power`](other.md#power) | Smallest change a task size can detect |
+| [`refusal-eval`](other.md#refusal-eval) | Measure a refusal detector on labeled responses |
 
 ## Global options
 
@@ -26,7 +29,7 @@ Audit what changed between a base LLM and a derivative model.
 
 *flag*
 
-Print `modeldiffr 0.2.0` and exit.
+Print `modeldiffr 0.3.0` and exit.
 
 #### `-h, --help`
 

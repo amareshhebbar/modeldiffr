@@ -7,6 +7,33 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.3.0
+
+*October 2026*
+
+### Phase 2: behavioral layer
+
+**Added**
+
+* Suites `lite`, `standard` and `full` over thirteen tasks: MMLU, ARC Challenge, HellaSwag, TruthfulQA MC1, GSM8K, MGSM, IFEval, XSTest safe and unsafe, OR Bench hard and toxic, HumanEval, long context needle and output divergence. Every dataset is pinned to a commit.
+* Deterministic, nested item sampling by hash; `--tasks`, `--limit` and offline `--data-dir`.
+* Expected calibration error for every multiple choice task.
+* Refusal detectors: keyword or any Hugging Face classifier (`--refusal-detector`), and `modeldiffr refusal-eval`.
+* IFEval checks for 25 instruction types, without extra dependencies.
+* HumanEval in a limited subprocess behind `--allow-code-execution`.
+* Bootstrap p values, Benjamini Hochberg correction (`--fdr`), minimum effect sizes and a `negligible` verdict.
+* A plan before every audit with the detectable change per task, `--plan-only`, `--estimate`, and `modeldiffr power`.
+* Backends: batched transformers, vLLM, llama.cpp for GGUF, and OpenAI compatible APIs, chosen per model.
+* GGUF fingerprints from quantized tensor bytes.
+* `modeldiffr tasks`, and `verify --suite-data` to rebuild dataset suites.
+* Colab notebook.
+* Extras `tasks`, `vllm`, `llamacpp` and `all`.
+
+**Changed**
+
+* Report schema `0.3`: generic per task items, a `spec` on every metric, `plan`, and `verdict.negligible`. Manifest schema `modeldiffr.manifest/2`.
+* Reports from 0.2 still verify.
+
 ## 0.2.0
 
 *October 2026*
