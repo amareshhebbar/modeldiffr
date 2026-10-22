@@ -351,24 +351,31 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         print(f"[modeldiffr] {message}", file=sys.stderr, flush=True)
 
     try:
-        result = verify_file(
-            args.report,
-            check_models=args.models,
-            progress=log,
-            suite_data=args.suite_data,
-            key=args.key,
-            identity=args.identity,
-            issuer=args.issuer,
-            staging=args.staging,
-            rpc=args.rpc,
-        )
+        with open(args.report, encoding="utf-8") as f:
+            schema = json.load(f).get("schema")
+        if schema == "modeldiffr.features/1":
+            from modeldiffr.interp.features import verify_features
+
+            result = verify_features(args.report)
+        else:
+            result = verify_file(
+                args.report,
+                check_models=args.models,
+                progress=log,
+                suite_data=args.suite_data,
+                key=args.key,
+                identity=args.identity,
+                issuer=args.issuer,
+                staging=args.staging,
+                rpc=args.rpc,
+            )
     except (OSError, ValueError, KeyError) as exc:
         print(f"error: cannot read report: {exc}", file=sys.stderr)
         return 2
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"audit id {result['audit_id']}")
+        print(f"audit id {result.get('audit_id') or result.get('id')}")
         for c in result["checks"]:
             print(f"{c['status'].upper():<5} {c['name']:<26} {c['detail']}")
         print("\nverified" if result["ok"] else "\nverification FAILED")
