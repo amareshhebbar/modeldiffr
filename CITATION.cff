@@ -8,8 +8,8 @@ authors:
     email: hebbar.gvamaresh@gmail.com
 repository-code: "https://github.com/amareshhebbar/modeldiffr"
 license: Apache-2.0
-version: 0.1.0
-date-released: 2026-10-04
+version: 0.2.0
+date-released: 2026-10-22
 keywords:
   - llm
   - model diffing
