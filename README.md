@@ -27,7 +27,7 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Early preview (v0.4), Phases 1 to 3 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; every report fingerprinted, verifiable and signable with Sigstore or a key, with optional public timestamps. Representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Early preview (v0.5), Phases 1 to 4 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; every report fingerprinted, verifiable and signable, with optional public timestamps; planted regression controls, batch audits and a static registry that verifies audits in the browser. Representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
 
 Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
@@ -190,7 +190,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.4.0}
+  version = {0.5.0}
 }
 ```
 

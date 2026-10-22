@@ -9,8 +9,8 @@ This file is the public plan. It is mirrored on the [documentation site](https:/
 | 0. Foundation | 0.1 | Shipped |
 | 1. Trustworthy core | 0.2 | Shipped |
 | 2. Behavioral layer MVP | 0.3 | Shipped |
-| 3. Proof, signing and integrations | 0.4 | **Shipped** |
-| 4. Public audits and launch | 0.5 | Next |
+| 3. Proof, signing and integrations | 0.4 | Shipped |
+| 4. Public audits and launch | 0.5 | **Tooling shipped** |
 | 5. Representational layer | 0.6 | Planned |
 | 6. Causal layer | 0.7 | Planned |
 | 7. Anomaly scan | 0.8 | Research |
@@ -93,13 +93,17 @@ Audits become evidence that tools and people can check.
 
 See [Attestations](https://modeldiffr.netlify.app/concepts/attestation/).
 
-## Phase 4: Public audits and launch (0.5)
+## Phase 4: Public audits and launch (0.5, tooling shipped)
 
-* [ ] Positive controls: pairs with planted regressions, all found
-* [ ] Ten signed public audits: official quants, popular fine tunes, merges, abliterated models
-* [ ] A public registry where anyone can verify a listed audit in the browser
+* [x] Positive controls: `modeldiffr controls make` plants identity, noise, scale, zero and pruning changes, reproducibly
+* [x] Batch audits from YAML or JSON with resume, scored controls, detection and false positive rates
+* [x] A public registry where anyone can verify a listed audit in the browser, including Ed25519 signatures
+* [x] A ready spec for eleven public audits: official GGUF quants, abliterated models, instruction tunes, a distillation and two controls
+* [ ] Run the control study and the eleven audits on a GPU and publish them, signed
 * [ ] Launch write up on the most significant finding outside noise
 * [ ] Free signed audits offered to popular quantizers and fine tuners
+
+See [Positive controls](https://modeldiffr.netlify.app/guides/controls/), [Batch audits](https://modeldiffr.netlify.app/guides/batch/) and [Public registry](https://modeldiffr.netlify.app/guides/registry/).
 
 ## Phase 5: Representational layer (0.6)
 

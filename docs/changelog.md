@@ -7,6 +7,20 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.5.0
+
+*October 2026*
+
+### Phase 4: public audits, tooling
+
+**Added**
+
+* `modeldiffr controls make` writes copies of a model with planted changes (identity, noise, scale, zero, pruning). See [Positive controls](guides/controls.md).
+* `modeldiffr batch` runs many audits from one file, resumes after failures and scores planted changes. See [Batch audits](guides/batch.md).
+* `modeldiffr registry build` publishes audits as a static site where every visitor's browser recomputes the hashes and checks Ed25519 signatures. See [Public registry](guides/registry.md).
+* Example specs for a control study and eleven public audits.
+* Extra `batch`.
+
 ## 0.4.0
 
 *October 2026*
