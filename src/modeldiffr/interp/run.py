@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 
+from modeldiffr.interp.artifact import finalize
 from modeldiffr.interp.capture import capture
 from modeldiffr.interp.corpus import corpus_root
 from modeldiffr.interp.crosscoder import CrosscoderConfig, save, train
@@ -8,7 +9,6 @@ from modeldiffr.interp.features import (
     SCHEMA,
     analyze,
     feature_manifest,
-    finalize,
     label_prompt_hash,
     now,
 )
@@ -140,7 +140,7 @@ def run_feature_diff(
             "audit": links,
             "layer_stats": layer_stats,
             "training": stats,
-            "weights": {"file": weights_file.name, "sha256": weights_hash},
+            "files": {weights_file.name: weights_hash},
             **result,
         }
     )
