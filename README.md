@@ -8,6 +8,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr)](LICENSE)
+[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-9A5B00)](https://modeldiffr.netlify.app)
 
 </div>
 
@@ -26,7 +27,9 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Phase 0, early preview (v0.1).** The behavioral layer works today with a small built in smoke suite. Standard benchmark suites, representational diffing, and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Early preview (v0.2), Phase 1 shipped.** The behavioral layer works with a small built in smoke suite, and every report is fingerprinted and verifiable. Standard benchmark suites, signing, representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+
+Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
 ## What it measures today
 
@@ -61,6 +64,9 @@ modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --out reports/qwen
 Terminal output:
 
 ```text
+audit id mdr1:71e153dc730bb9ec20b7159dc8845afab76de27ddf94b99cada26c713aa3170d
+weights: 290 of 290 shared tensors changed, 0 added, 0 removed
+
 capability_accuracy      base 0.7917  derivative 0.7500  delta -0.0417  95% CI [-0.1667, +0.0833]  within noise
 over_refusal_rate        base 0.1000  derivative 0.0000  delta -0.1000  95% CI [-0.2500, +0.0000]  within noise
 output_divergence_kl     base 0.0000  derivative 0.4120  delta +0.4120  95% CI [+0.3051, +0.5233]  CHANGED
@@ -84,6 +90,19 @@ The output directory contains:
 * `--base-revision` and `--derivative-revision`: pin exact model commits for reproducibility.
 * `--seed`: seed for the bootstrap. Default `0`.
 * `--fail-on-change`: exit with code 1 when any metric changes significantly.
+* `--template`: which chat template renders generation prompts; `auto` gives both models identical text.
+
+### Verify any report
+
+Every report hashes both models tensor by tensor, every question and every result. Anyone can check it without trusting the author:
+
+```bash
+modeldiffr verify reports/qwen_instruct_vs_base/report.json
+modeldiffr verify reports/qwen_instruct_vs_base/report.json --models
+modeldiffr fingerprint Qwen/Qwen2.5-0.5B-Instruct
+```
+
+`--models` also hashes the real model files at the recorded commits. See [Fingerprints and proof](https://modeldiffr.netlify.app/concepts/proof/).
 
 ### Use it as a CI gate
 
@@ -115,17 +134,20 @@ print(result["verdict"])
 
 ## How it works
 
-1. Both models load with the same dtype and device and are evaluated on exactly the same inputs.
-2. Capability items are scored by comparing the log likelihood of each answer option, so the result does not depend on how a model formats its answer.
-3. Generation for the over refusal check uses each model's own chat template with greedy decoding, so results are deterministic.
-4. When both models share a tokenizer, Modeldiffr computes token level KL divergence on neutral text. When tokenizers differ, the metric is skipped and the report says so.
-5. Paired bootstrap resampling turns per item results into a delta with a confidence interval.
+1. Both models are fingerprinted (weights, tokenizer, chat template), checked for comparability, and the audit gets an id computed from everything that defines it.
+2. Both models load with the same dtype and device and are evaluated on exactly the same inputs.
+3. Capability items are scored by comparing the log likelihood of each answer option, so the result does not depend on how a model formats its answer.
+4. Generation for the over refusal check uses greedy decoding, with one shared chat template when the templates differ, so both models receive identical text.
+5. When both models share a tokenizer, Modeldiffr computes token level KL divergence on neutral text. When tokenizers differ, the metric is skipped and the report says so.
+6. Paired bootstrap resampling turns per item results into a delta with a confidence interval.
+7. Every result is hashed into the report, so `modeldiffr verify` can recompute it.
 
 ## Roadmap
 
 Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
 
-* **Layer 1, behavioral diff.** What changed in behavior? *v0.1 smoke suite shipped; standard benchmark suites next.*
+* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify shipped; signing and public timestamps in Phase 3.*
+* **Layer 1, behavioral diff.** What changed in behavior? *Smoke suite shipped; standard benchmark suites next.*
 * **Layer 2, representational diff.** Where inside the model did it change? Crosscoder based model diffing. *Planned.*
 * **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *Planned.*
 * **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *Research; accuracy will be measured and published before any claim.*
@@ -155,7 +177,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.1.0}
+  version = {0.2.0}
 }
 ```
 

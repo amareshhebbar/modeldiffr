@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.2.0 (October 2026)
+
+Phase 1: trustworthy core.
+
+### Added
+
+* Weight fingerprints: SHA 256 per tensor and an RFC 6962 Merkle root that ignores sharding; safetensors read directly in every dtype, PyTorch checkpoints give the same root.
+* `weights_diff` in every report: which tensors changed, were added or removed.
+* Tokenizer, vocabulary and chat template fingerprints.
+* Comparability checks recorded under `comparability`, and one shared chat template for generation prompts when templates differ (`--template`), with the hash of every rendered prompt.
+* RFC 8785 canonical JSON and an `audit_id` computed from a manifest of models, suite and settings.
+* `proof` section with suite root, results root and statement hash.
+* `modeldiffr verify` (offline, or `--models` against the real files) and `modeldiffr fingerprint`.
+* JSON Schema for reports shipped in the package; `proof` extra.
+* Identical model control, tamper tests and a CPU integration test with a real transformers model in CI.
+* Exit codes 3 (pair not comparable) and 4 (verification failed).
+
+### Changed
+
+* Report schema 0.2.
+* Docs moved from Mintlify to MkDocs Material on Netlify.
+
 ## 0.1.0 (2026)
 
 ### Added

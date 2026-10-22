@@ -23,3 +23,5 @@ audit/
 *.bin
 *.gguf
 *.pt
+
+site/

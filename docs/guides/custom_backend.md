@@ -1,0 +1,112 @@
+---
+title: Custom backends
+description: Audit models that are already in memory, or served by another runtime.
+---
+
+# Custom backends
+
+Audit models that are already in memory, or served by another runtime.
+
+`run_audit` does not depend on Hugging Face. It accepts any object that satisfies the `Backend` protocol.
+
+```python
+class Backend(Protocol):
+    name: str
+
+    def metadata(self) -> dict: ...
+    def choice_logprob(self, prompt: str, continuation: str) -> float: ...
+    def generate(self, prompt: str, max_new_tokens: int) -> str: ...
+    def vocab_signature(self) -> str: ...
+    def divergence_to(self, other: "Backend", text: str) -> float: ...
+```
+
+See the [protocol reference](../reference/python/backend_protocol.md) for the contract of each method.
+
+!!! warning
+
+    `metadata()` must return a dict containing `model_id`. The HTML report reads it for the page header.
+
+## Wrap a model already in memory
+
+Useful inside a training loop or with a PEFT model, where reloading from disk is slow. Subclass `HFBackend` and skip its loader.
+
+```python in_memory_backend.py
+import torch
+
+from modeldiffr.backend import HFBackend
+
+class InMemoryBackend(HFBackend):
+    def __init__(self, model, tokenizer, name, revision=None):
+        self._torch = torch
+        self.name = name
+        self.revision = revision
+        self.model = model.eval()
+        self.tokenizer = tokenizer
+        if self.tokenizer.pad_token is None:
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+        self.device = str(next(model.parameters()).device)
+```
+
+```python
+from modeldiffr import run_audit
+from modeldiffr.backend import HFBackend
+from modeldiffr.suites import get_suite
+
+from in_memory_backend import InMemoryBackend
+
+base = HFBackend("Qwen/Qwen2.5-0.5B-Instruct", dtype="bfloat16")
+candidate = InMemoryBackend(trainer.model, tokenizer, name="run_42/step_4000")
+result = run_audit(base, candidate, get_suite("quick"))
+```
+
+All scoring, generation, and divergence methods are inherited unchanged, so results stay comparable with CLI audits.
+
+## Write a backend from scratch
+
+The skeleton below shows what each method must return. Fill it with calls to your runtime.
+
+```python my_backend.py
+import hashlib
+
+class MyBackend:
+    def __init__(self, name):
+        self.name = name
+
+    def metadata(self):
+        return {"model_id": self.name, "revision": None, "device": "remote"}
+
+    def choice_logprob(self, prompt, continuation):
+        return sum_of_token_logprobs(prompt, continuation)
+
+    def generate(self, prompt, max_new_tokens):
+        return greedy_completion(prompt, max_new_tokens)
+
+    def vocab_signature(self):
+        return hashlib.sha256(serialized_vocab().encode("utf-8")).hexdigest()
+
+    def divergence_to(self, other, text):
+        return mean_token_kl(self, other, text)
+```
+
+??? note "Rules for a correct backend"
+
+    * `choice_logprob` returns the summed log probability of the continuation tokens only, not the prompt tokens.
+    * `generate` uses greedy decoding and returns only the new text, without the prompt.
+    * `vocab_signature` returns an identical string for two models only when their tokenizers are identical. When signatures differ, the divergence metric is skipped.
+    * `divergence_to` returns a non negative float: KL from `self` to `other`, averaged over token positions.
+
+??? note "Runtimes without full logits"
+
+    Many hosted APIs return only top k log probabilities. That is enough for `choice_logprob` when the API can score a supplied continuation, but not for an exact `divergence_to`. Return a `vocab_signature` unique to the instance so the divergence metric is skipped cleanly rather than approximated.
+
+## Test your backend without a GPU
+
+The test suite uses a fake backend that returns fixed values. Mirror it to check your wiring:
+
+```python
+from modeldiffr import run_audit
+from modeldiffr.suites import get_suite
+
+result = run_audit(MyBackend("a"), MyBackend("a"), get_suite("quick"))
+assert result["verdict"]["any_change"] is False
+```
