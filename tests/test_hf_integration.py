@@ -1,0 +1,115 @@
+import json
+
+import pytest
+
+torch = pytest.importorskip("torch")
+transformers = pytest.importorskip("transformers")
+tokenizers = pytest.importorskip("tokenizers")
+
+from modeldiffr.audit import run_audit  # noqa: E402
+from modeldiffr.backend import HFBackend  # noqa: E402
+from modeldiffr.cli import main  # noqa: E402
+from modeldiffr.proof.verify import verify_report  # noqa: E402
+from modeldiffr.report import write_reports  # noqa: E402
+from modeldiffr.suites import QUICK  # noqa: E402
+
+TEMPLATE = "{% for m in messages %}<|{{ m['role'] }}|> {{ m['content'] }} {% endfor %}<|assistant|>"
+
+
+def _tokenizer(template):
+    words = set()
+    for item in QUICK.capability:
+        words.update(item.question.split())
+        for c in item.choices:
+            words.update(c.split())
+    for t in QUICK.benign_prompts + QUICK.neutral_texts:
+        words.update(t.split())
+    words.update(["Question:", "Answer:", "User:", "Assistant:", "<|user|>", "<|assistant|>"])
+    vocab = {"<unk>": 0, "<s>": 1, "</s>": 2}
+    for w in sorted(words):
+        vocab.setdefault(w, len(vocab))
+    model = tokenizers.models.WordLevel(vocab=vocab, unk_token="<unk>")
+    tok = tokenizers.Tokenizer(model)
+    tok.pre_tokenizer = tokenizers.pre_tokenizers.WhitespaceSplit()
+    tok.decoder = tokenizers.decoders.WordPiece(prefix="##")
+    fast = transformers.PreTrainedTokenizerFast(
+        tokenizer_object=tok, unk_token="<unk>", bos_token="<s>", eos_token="</s>", pad_token="</s>"
+    )
+    fast.chat_template = template
+    return fast
+
+
+def _save(path, seed, template=TEMPLATE, perturb=None):
+    tok = _tokenizer(template)
+    torch.manual_seed(seed)
+    config = transformers.LlamaConfig(
+        vocab_size=len(tok),
+        hidden_size=32,
+        intermediate_size=64,
+        num_hidden_layers=2,
+        num_attention_heads=2,
+        num_key_value_heads=2,
+        max_position_embeddings=256,
+        bos_token_id=1,
+        eos_token_id=2,
+        pad_token_id=2,
+    )
+    model = transformers.LlamaForCausalLM(config)
+    if perturb:
+        with torch.no_grad():
+            dict(model.named_parameters())[perturb].add_(0.05)
+    model.save_pretrained(path, safe_serialization=True)
+    tok.save_pretrained(path)
+    return path
+
+
+@pytest.fixture(scope="module")
+def pair(tmp_path_factory):
+    root = tmp_path_factory.mktemp("models")
+    base = _save(root / "base", 0)
+    deriv = _save(root / "deriv", 0, perturb="model.layers.1.mlp.down_proj.weight")
+    return str(base), str(deriv)
+
+
+def test_real_audit_fingerprints_and_verifies(pair, tmp_path):
+    base, deriv = HFBackend(pair[0], device="cpu"), HFBackend(pair[1], device="cpu")
+    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 4})
+    result = run_audit(base, deriv, suite, n_resamples=200)
+    assert result["weights_diff"]["changed"] == ["model.layers.1.mlp.down_proj.weight"]
+    assert (
+        result["manifest"]["base"]["chat_template"]
+        == result["manifest"]["derivative"]["chat_template"]
+    )
+    assert result["settings"]["template_mode"] == "own"
+    path, _ = write_reports(result, tmp_path)
+    loaded = json.loads(path.read_text())
+    assert verify_report(loaded)["ok"]
+    assert verify_report(loaded, check_models=True)["ok"]
+
+
+def test_identical_real_models_show_no_change(pair):
+    a, b = HFBackend(pair[0], device="cpu"), HFBackend(pair[0], device="cpu")
+    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 4})
+    result = run_audit(a, b, suite, n_resamples=200)
+    assert result["verdict"]["any_change"] is False
+    assert result["weights_diff"]["identical"]
+
+
+def test_fingerprint_cli(pair, capsys):
+    assert main(["fingerprint", pair[0], "--json"]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert out["weights"]["root"].startswith("sha256:") and out["tokenizer"]["chat_template"]
+
+
+def test_different_templates_share_one_rendering(tmp_path):
+    base = _save(tmp_path / "b", 1)
+    deriv = _save(tmp_path / "d", 1, template="<|user|> {{ messages[0]['content'] }} <|assistant|>")
+    a, b = HFBackend(str(base), device="cpu"), HFBackend(str(deriv), device="cpu")
+    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 2})
+    result = run_audit(a, b, suite, n_resamples=100)
+    assert result["settings"]["template_mode"] == "base"
+    rows = result["items"]["over_refusal"]
+    assert [r["rendered_sha256"] for r in rows["base"]] == [
+        r["rendered_sha256"] for r in rows["derivative"]
+    ]
+    assert any(i["code"] == "chat_template_mismatch" for i in result["comparability"]["issues"])
