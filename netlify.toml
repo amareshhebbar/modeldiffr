@@ -1,0 +1,17 @@
+[build]
+  base = "."
+  publish = "site"
+  command = "pip install -r docs/requirements.txt && mkdocs build --strict"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[redirects]]
+  from = "/docs/*"
+  to = "/:splat"
+  status = 301
