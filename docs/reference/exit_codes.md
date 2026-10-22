@@ -13,7 +13,8 @@ What each exit code from modeldiffr means.
 | `1` | `audit` | `--fail-on-change` was set and `verdict.any_change` is true. Reports are still written. |
 | `2` | any | Missing dependency, unsupported weight format, an unreadable report, a signing or anchoring error, or `sign` without `--key` or `--sigstore`. Also returned by argparse on invalid arguments. |
 | `3` | `audit` | The pair cannot be compared fairly, for example `--template base` with different tokenizers. Nothing was run. |
-| `4` | `verify`, `reveal` | At least one verification check failed, or a revealed file does not match its commitment. |
+| `4` | `verify`, `reveal`, `registry build` | At least one verification check failed, a revealed file does not match its commitment, or a report was left out of the registry. |
+| `5` | `batch` | At least one audit in the batch failed. The others finished and `index.json` was written. |
 
 Other failures, such as a model id that does not exist or running out of GPU memory, raise the underlying exception with a non zero exit and a traceback.
 
