@@ -8,7 +8,8 @@ description: Check a report for consistency and, optionally, against the real mo
 Check a report for consistency and, optionally, against the real model files.
 
 ```text
-usage: modeldiffr verify [-h] [--models] [--json] report
+usage: modeldiffr verify [-h] [--models] [--suite-data SUITE_DATA] [--json] [--key KEY]
+                         [--identity IDENTITY] [--issuer ISSUER] [--staging] [--rpc RPC] report
 ```
 
 ## Arguments
@@ -32,6 +33,10 @@ Also hash both models' weights and compare them with the roots in the report. Hu
 *string*
 
 Rebuild a dataset suite to check its root: `hub` downloads the pinned datasets, a folder uses its `TASK.jsonl` files. Without it, dataset suites are skipped and built in suites are always checked.
+
+#### `--key`, `--identity`, `--issuer`, `--staging`, `--rpc`
+
+Check signatures and anchors stored next to the report: `--key` for `report.dsse.json`, `--identity` and `--issuer` for `report.sigstore.json` and for `model.sig` in the models, `--rpc` for attestations in `anchors.json`. See [Signing and publishing commands](attest.md#verify-options-for-attestations).
 
 #### `--json`
 
