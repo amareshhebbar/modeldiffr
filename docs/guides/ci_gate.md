@@ -11,6 +11,11 @@ Block a checkpoint that changes significantly before it ships.
 
 ## GitHub Actions
 
+!!! tip
+
+    The repository ships a ready made action that also signs the report and writes a bill of materials. See [Publish an audit](publishing.md#github-action). The workflow below shows the same steps by hand.
+
+
 ```yaml .github/workflows/model_audit.yml
 name: Model audit
 
