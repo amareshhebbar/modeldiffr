@@ -379,7 +379,10 @@ def _cmd_verify(args: argparse.Namespace) -> int:
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"audit id {result.get('audit_id') or result.get('id')}")
+        if result.get("audit_id"):
+            print(f"audit id {result['audit_id']}")
+        else:
+            print(f"id {result.get('id')}")
         for c in result["checks"]:
             print(f"{c['status'].upper():<5} {c['name']:<26} {c['detail']}")
         print("\nverified" if result["ok"] else "\nverification FAILED")

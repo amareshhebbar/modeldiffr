@@ -530,3 +530,14 @@ def test_model_signature_uses_sigstore_identity(tmp_path):
     assert seen["identity"] == "a@b.c" and seen["oidc_issuer"] == "https://iss"
     skipped = check_model_signature("derivative", tmp_path, module=module)
     assert skipped["status"] == "skip"
+
+
+def test_statement_predicate_matches_its_published_schema(report_dir):
+    jsonschema = pytest.importorskip("jsonschema")
+    from importlib import resources
+
+    schema = json.loads(
+        resources.files("modeldiffr.schema").joinpath("audit-predicate-v1.schema.json").read_text()
+    )
+    predicate = build_statement(load(report_dir / "report.json"))["predicate"]
+    jsonschema.Draft202012Validator(schema).validate(predicate)

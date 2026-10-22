@@ -5,6 +5,11 @@ from pathlib import Path
 
 from modeldiffr.proof.canonical import canonical_json, object_hash, sha256_hex
 
+SCHEMA_FILES = {
+    "modeldiffr.features/1": "features.schema.json",
+    "modeldiffr.causal/1": "causal.schema.json",
+    "modeldiffr.scan/1": "scan.schema.json",
+}
 PREFIXES = {
     "modeldiffr.features/1": "mdrf1:",
     "modeldiffr.causal/1": "mdrc1:",
@@ -39,6 +44,29 @@ def write(doc: dict, out: Path, name: str) -> Path:
     return path
 
 
+def load_schema(schema: str) -> dict:
+    from importlib import resources
+
+    text = resources.files("modeldiffr.schema").joinpath(SCHEMA_FILES[schema]).read_text("utf-8")
+    return json.loads(text)
+
+
+def schema_check(doc: dict) -> dict:
+    try:
+        import jsonschema
+    except ImportError:
+        return {"name": "schema", "status": "skip", "detail": "install jsonschema for a full check"}
+    errors = sorted(
+        jsonschema.Draft202012Validator(load_schema(doc["schema"])).iter_errors(doc),
+        key=lambda e: list(e.path),
+    )
+    if errors:
+        e = errors[0]
+        where = "/".join(str(x) for x in e.path) or "(root)"
+        return {"name": "schema", "status": "fail", "detail": f"{where}: {e.message}"}
+    return {"name": "schema", "status": "pass", "detail": f"valid against {doc['schema']}"}
+
+
 def _c(name, ok, detail):
     return {"name": name, "status": "pass" if ok else "fail", "detail": detail}
 
@@ -53,7 +81,7 @@ def verify_artifact(path: str | Path, extra=None) -> dict:
             "id": doc.get("id"),
             "checks": [_c("schema", False, f"unknown {schema}")],
         }
-    checks = []
+    checks = [schema_check(doc)]
     want = PREFIXES[schema] + sha256_hex(canonical_json(doc["manifest"]))
     same = want == doc.get("id")
     checks.append(_c("id", same, want if same else f"manifest hashes to {want}"))
