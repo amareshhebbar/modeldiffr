@@ -86,10 +86,10 @@ modeldiffr verify audit/features.json
 ```
 
 ```text
-PASS  features_id                mdrf1:a77a8e2a...
+PASS  id                         mdrf1:a77a8e2a...
 PASS  result_hash                results match their hash
+PASS  crosscoder.safetensors     matches its hash
 PASS  classes                    16384 features classified
-PASS  crosscoder_weights         crosscoder.safetensors
 ```
 
 See [Representational layer](../concepts/representational.md) for the method and its limits.
