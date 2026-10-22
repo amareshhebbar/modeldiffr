@@ -5,7 +5,7 @@ import sys
 from modeldiffr import __version__
 from modeldiffr.backend import MissingDependencyError
 from modeldiffr.checks import TEMPLATE_MODES, ComparabilityError
-from modeldiffr.suites import SUITES, get_suite
+from modeldiffr.suites import SUITES
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -19,7 +19,49 @@ def _build_parser() -> argparse.ArgumentParser:
     audit = sub.add_parser("audit", help="Compare a base model with a derivative model.")
     audit.add_argument("base", help="Base model id or local path.")
     audit.add_argument("derivative", help="Derivative model id or local path.")
-    audit.add_argument("--suite", default="quick", choices=sorted(SUITES), help="Evaluation suite.")
+    audit.add_argument(
+        "--suite",
+        default="quick",
+        help="quick (built in, no downloads), lite, standard or full. See modeldiffr suites.",
+    )
+    audit.add_argument("--tasks", default=None, help="Comma separated tasks to run from the suite.")
+    audit.add_argument("--limit", type=int, default=None, help="At most this many items per task.")
+    audit.add_argument(
+        "--data-dir", default=None, help="Folder with TASK.jsonl files for offline use."
+    )
+    audit.add_argument(
+        "--allow-code-execution",
+        action="store_true",
+        help="Run model written code for humaneval in a sandboxed subprocess.",
+    )
+    audit.add_argument(
+        "--refusal-detector",
+        default="keyword",
+        help="keyword, or hf:MODEL_ID[@LABEL] for a text classification model.",
+    )
+    audit.add_argument(
+        "--fdr", type=float, default=0.05, help="False discovery rate across metrics."
+    )
+    audit.add_argument(
+        "--estimate", action="store_true", help="Time a few calls and print the expected run time."
+    )
+    audit.add_argument(
+        "--plan-only",
+        action="store_true",
+        help="Load the suite, print the plan, estimate the run time and stop.",
+    )
+    audit.add_argument(
+        "--backend", default="auto", help="hf, vllm, llamacpp or api for both models."
+    )
+    audit.add_argument("--base-backend", default=None, help="Backend for the base model.")
+    audit.add_argument(
+        "--derivative-backend", default=None, help="Backend for the derivative model."
+    )
+    audit.add_argument(
+        "--api-base", default=None, help="OpenAI compatible endpoint for the api backend."
+    )
+    audit.add_argument("--n-ctx", type=int, default=4096, help="Context size for llama.cpp.")
+    audit.add_argument("--n-gpu-layers", type=int, default=0, help="Layers on GPU for llama.cpp.")
     audit.add_argument("--out", default="modeldiffr_report", help="Output directory.")
     audit.add_argument("--device", default="auto", help="auto, cpu, cuda, cuda:0, or mps.")
     audit.add_argument(
@@ -49,6 +91,17 @@ def _build_parser() -> argparse.ArgumentParser:
     )
 
     sub.add_parser("suites", help="List available suites.")
+    sub.add_parser("tasks", help="List available tasks with their datasets.")
+
+    power = sub.add_parser("power", help="Smallest change a task size can detect.")
+    power.add_argument("--n", type=int, required=True, help="Number of paired items.")
+    power.add_argument("--rate", type=float, default=0.5, help="Expected base accuracy or rate.")
+    power.add_argument("--power", type=float, default=0.8)
+    power.add_argument("--alpha", type=float, default=0.05)
+
+    reval = sub.add_parser("refusal-eval", help="Measure a refusal detector on labeled responses.")
+    reval.add_argument("file", help="JSONL with response and refused (true or false) per line.")
+    reval.add_argument("--detector", default="keyword")
 
     verify = sub.add_parser("verify", help="Check that a report is internally consistent.")
     verify.add_argument("report", help="Path to report.json.")
@@ -58,6 +111,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Also download or read both models and check their weights against the report.",
     )
     verify.add_argument("--json", action="store_true", help="Print the result as JSON.")
+    verify.add_argument(
+        "--suite-data",
+        default=None,
+        help="Rebuild dataset suites to check their root: hub, or a folder of TASK.jsonl files.",
+    )
 
     fp = sub.add_parser("fingerprint", help="Print content hashes for a model.")
     fp.add_argument("model", help="Model id or local path.")
@@ -68,30 +126,131 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _cmd_suites() -> int:
+    from modeldiffr.tasks.registry import SIZES
+
     for name, suite in sorted(SUITES.items()):
         print(
-            f"{name}: {len(suite.capability)} capability items, "
+            f"{name}: built in, {len(suite.capability)} capability items, "
             f"{len(suite.benign_prompts)} over refusal prompts, "
             f"{len(suite.neutral_texts)} divergence texts"
         )
+    for name, sizes in SIZES.items():
+        parts = [f"{t} {'all' if n is None else n}" for t, n in sizes.items()]
+        print(f"{name}: {', '.join(parts)}")
     return 0
 
 
+def _cmd_tasks() -> int:
+    from modeldiffr.tasks.registry import build_tasks
+
+    for name, task in build_tasks().items():
+        src = task.source
+        where = (
+            f"{src.path} {src.config or ''} {src.split}@{(src.revision or 'main')[:10]}"
+            if src
+            else "built in"
+        )
+        metrics = ", ".join(m.name for m in task.metrics)
+        print(f"{name:<15} {task.kind:<16} {where.strip():<60} {metrics}")
+    return 0
+
+
+def _cmd_power(args) -> int:
+    from modeldiffr.stats import min_detectable_effect
+
+    mde = min_detectable_effect(args.n, args.rate, args.alpha, args.power)
+    print(
+        f"with {args.n} paired items at a rate near {args.rate:.2f}, changes of about "
+        f"{mde * 100:.1f} points are detected {args.power:.0%} of the time"
+    )
+    return 0
+
+
+def _cmd_refusal_eval(args) -> int:
+    from modeldiffr.tasks.refusal import make_detector
+
+    with open(args.file, encoding="utf-8") as f:
+        rows = [json.loads(line) for line in f if line.strip()]
+    detector = make_detector(args.detector)
+    got = detector.batch([r["response"] for r in rows])
+    want = [bool(r["refused"]) for r in rows]
+    tp = sum(g and w for g, w in zip(got, want, strict=True))
+    tn = sum(not g and not w for g, w in zip(got, want, strict=True))
+    fp = sum(g and not w for g, w in zip(got, want, strict=True))
+    fn = sum(not g and w for g, w in zip(got, want, strict=True))
+    n = len(rows)
+    print(f"detector  {detector.name}")
+    print(f"items     {n}")
+    print(f"accuracy  {(tp + tn) / n:.4f}")
+    print(f"precision {tp / (tp + fp) if tp + fp else 0:.4f}")
+    print(f"recall    {tp / (tp + fn) if tp + fn else 0:.4f}")
+    return 0
+
+
+def _side_backend(args, side: str, model: str, revision):
+    from modeldiffr.backends import detect_backend, make_backend
+
+    explicit = getattr(args, f"{side}_backend") or args.backend
+    kind = detect_backend(model, explicit)
+    return make_backend(
+        kind,
+        model,
+        device=args.device,
+        revision=revision,
+        dtype=args.dtype,
+        trust_remote_code=args.trust_remote_code,
+        seed=args.seed,
+        api_base=args.api_base,
+        n_ctx=args.n_ctx,
+        n_gpu_layers=args.n_gpu_layers,
+    )
+
+
 def _cmd_audit(args: argparse.Namespace) -> int:
-    from modeldiffr.audit import run_audit
-    from modeldiffr.backend import HFBackend
+    from modeldiffr.audit import AuditPlanError, load_items, plan, run_audit
     from modeldiffr.report import write_reports
+    from modeldiffr.tasks.code import CodeExecutionNotAllowedError
+    from modeldiffr.tasks.data import DatasetUnavailableError
+    from modeldiffr.tasks.refusal import make_detector
+    from modeldiffr.tasks.registry import task_suite
 
     def log(message: str) -> None:
         print(f"[modeldiffr] {message}", file=sys.stderr, flush=True)
 
-    suite = get_suite(args.suite)
+    only = [t.strip() for t in args.tasks.split(",")] if args.tasks else None
+    try:
+        suite = task_suite(args.suite, only, args.limit, args.allow_code_execution)
+    except KeyError as exc:
+        print(f"error: {exc.args[0]}", file=sys.stderr)
+        return 2
+    if args.plan_only and not args.estimate:
+        try:
+            loaded = load_items(suite, args.data_dir, None, log)
+        except DatasetUnavailableError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+        for row in plan(loaded):
+            mde = row["min_detectable_effect"]
+            print(
+                f"{row['task']:<15} {row['items']:>6} items  "
+                f"{'' if mde is None else f'detects about {mde * 100:.1f} points'}"
+            )
+        return 0
+    detector = make_detector(args.refusal_detector)
     log(f"loading base model {args.base}")
-    base = HFBackend(args.base, args.device, args.base_revision, args.dtype, args.trust_remote_code)
+    base = _side_backend(args, "base", args.base, args.base_revision)
     log(f"loading derivative model {args.derivative}")
-    derivative = HFBackend(
-        args.derivative, args.device, args.derivative_revision, args.dtype, args.trust_remote_code
-    )
+    derivative = _side_backend(args, "derivative", args.derivative, args.derivative_revision)
+    if args.plan_only:
+        from modeldiffr.audit import estimate_seconds
+
+        loaded = load_items(suite, args.data_dir, None, log)
+        rows = plan(loaded)
+        seconds = estimate_seconds(base, derivative, rows)
+        for row in rows:
+            print(f"{row['task']:<15} {row['items']:>6} items")
+        print(f"estimated run time {seconds / 60:.1f} minutes on this hardware")
+        return 0
     try:
         result = run_audit(
             base,
@@ -102,11 +261,19 @@ def _cmd_audit(args: argparse.Namespace) -> int:
             progress=log,
             template=args.template,
             hash_weights=not args.no_weight_hash,
+            refusal_detector=detector,
+            allow_code_execution=args.allow_code_execution,
+            data_dir=args.data_dir,
+            fdr_q=args.fdr,
+            estimate=args.estimate,
         )
     except ComparabilityError as exc:
         for issue in exc.issues:
             print(f"{issue['level']}: {issue['message']}", file=sys.stderr)
         return 3
+    except (DatasetUnavailableError, CodeExecutionNotAllowedError, AuditPlanError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
     json_path, html_path = write_reports(result, args.out)
 
     print(f"\naudit id {result['audit_id']}")
@@ -120,11 +287,19 @@ def _cmd_audit(args: argparse.Namespace) -> int:
             f"{wd['added_count']} added, {wd['removed_count']} removed"
         )
     print()
+    width = max([24] + [len(m["name"]) + 1 for m in result["metrics"]])
     for m in result["metrics"]:
-        flag = "CHANGED" if m["significant"] else "within noise"
+        if m["significant"] and m.get("negligible"):
+            flag = "changed, negligible"
+        elif m["significant"]:
+            flag = "CHANGED"
+        else:
+            flag = "within noise"
         print(
-            f"{m['name']:<24} base {m['base_mean']:.4f}  derivative {m['derivative_mean']:.4f}  "
-            f"delta {m['delta']:+.4f}  95% CI [{m['ci_low']:+.4f}, {m['ci_high']:+.4f}]  {flag}"
+            f"{m['name']:<{width}} base {m['base_mean']:.4f}  "
+            f"derivative {m['derivative_mean']:.4f}  "
+            f"delta {m['delta']:+.4f}  95% CI [{m['ci_low']:+.4f}, {m['ci_high']:+.4f}]  "
+            f"p {m['p_value']:.4f}  {flag}"
         )
     for note in result["notes"]:
         print(f"note: {note}")
@@ -142,7 +317,9 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         print(f"[modeldiffr] {message}", file=sys.stderr, flush=True)
 
     try:
-        result = verify_file(args.report, check_models=args.models, progress=log)
+        result = verify_file(
+            args.report, check_models=args.models, progress=log, suite_data=args.suite_data
+        )
     except (OSError, ValueError, KeyError) as exc:
         print(f"error: cannot read report: {exc}", file=sys.stderr)
         return 2
@@ -201,6 +378,12 @@ def main(argv: list[str] | None = None) -> int:
             return _cmd_audit(args)
         if args.command == "verify":
             return _cmd_verify(args)
+        if args.command == "tasks":
+            return _cmd_tasks()
+        if args.command == "power":
+            return _cmd_power(args)
+        if args.command == "refusal-eval":
+            return _cmd_refusal_eval(args)
         if args.command == "fingerprint":
             return _cmd_fingerprint(args)
     except UnsupportedWeightsError as exc:

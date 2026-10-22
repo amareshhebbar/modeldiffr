@@ -52,7 +52,7 @@ jobs:
           cache: pip
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
       - run: pip install -e ".[hf,dev]"
-      - run: pytest tests/test_hf_integration.py tests/test_weights.py -v
+      - run: pytest tests/test_hf_integration.py tests/test_weights.py tests/test_backends.py -v
 
   build:
     runs-on: ubuntu-latest

@@ -91,11 +91,14 @@ nav:
           - concepts/how_it_works.md
           - concepts/metrics.md
           - concepts/statistics.md
+          - concepts/suites.md
           - concepts/reports.md
           - concepts/proof.md
       - Guides:
           - guides/ci_gate.md
           - guides/verify.md
+          - guides/backends.md
+          - guides/colab.md
           - guides/python_usage.md
           - guides/reproducibility.md
           - guides/custom_backend.md
@@ -113,6 +116,7 @@ nav:
           - reference/cli/verify.md
           - reference/cli/fingerprint.md
           - reference/cli/suites.md
+          - reference/cli/other.md
       - Python API:
           - reference/python/run_audit.md
           - reference/python/hf_backend.md

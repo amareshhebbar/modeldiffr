@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://modeldiffr.dev/schema/report/0.2.json",
+  "$id": "https://modeldiffr.dev/schema/report/0.3.json",
   "title": "Modeldiffr audit report",
   "type": "object",
   "required": [
@@ -22,11 +22,12 @@
     "notes",
     "items",
     "proof",
-    "wall_time_seconds"
+    "wall_time_seconds",
+    "plan"
   ],
   "properties": {
     "schema_version": {
-      "const": "0.2"
+      "const": "0.3"
     },
     "modeldiffr_version": {
       "type": "string"
@@ -66,10 +67,13 @@
       "required": [
         "seed",
         "n_resamples",
-        "max_new_tokens",
         "decoding",
         "template_mode",
-        "weights_hashed"
+        "weights_hashed",
+        "refusal_detector",
+        "allow_code_execution",
+        "fdr_q",
+        "context_limit"
       ],
       "properties": {
         "seed": {
@@ -78,9 +82,6 @@
         "n_resamples": {
           "type": "integer",
           "minimum": 1
-        },
-        "max_new_tokens": {
-          "type": "integer"
         },
         "decoding": {
           "const": "greedy"
@@ -94,6 +95,23 @@
         },
         "weights_hashed": {
           "type": "boolean"
+        },
+        "refusal_detector": {
+          "type": "string"
+        },
+        "allow_code_execution": {
+          "type": "boolean"
+        },
+        "fdr_q": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "context_limit": {
+          "type": [
+            "integer",
+            "null"
+          ]
         }
       }
     },
@@ -124,7 +142,7 @@
       ],
       "properties": {
         "schema": {
-          "const": "modeldiffr.manifest/1"
+          "const": "modeldiffr.manifest/2"
         },
         "base": {
           "type": "object",
@@ -299,7 +317,8 @@
           "required": [
             "name",
             "root",
-            "items"
+            "items",
+            "tasks"
           ],
           "properties": {
             "name": {
@@ -311,6 +330,40 @@
             },
             "items": {
               "type": "integer"
+            },
+            "tasks": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "kind",
+                  "source",
+                  "items",
+                  "max_new_tokens"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "object",
+                    "required": [
+                      "path"
+                    ]
+                  },
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "max_new_tokens": {
+                    "type": "integer"
+                  }
+                }
+              }
             }
           },
           "additionalProperties": false
@@ -320,10 +373,13 @@
           "required": [
             "seed",
             "n_resamples",
-            "max_new_tokens",
             "decoding",
             "template_mode",
-            "weights_hashed"
+            "weights_hashed",
+            "refusal_detector",
+            "allow_code_execution",
+            "fdr_q",
+            "context_limit"
           ],
           "properties": {
             "seed": {
@@ -332,9 +388,6 @@
             "n_resamples": {
               "type": "integer",
               "minimum": 1
-            },
-            "max_new_tokens": {
-              "type": "integer"
             },
             "decoding": {
               "const": "greedy"
@@ -348,6 +401,23 @@
             },
             "weights_hashed": {
               "type": "boolean"
+            },
+            "refusal_detector": {
+              "type": "string"
+            },
+            "allow_code_execution": {
+              "type": "boolean"
+            },
+            "fdr_q": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 1
+            },
+            "context_limit": {
+              "type": [
+                "integer",
+                "null"
+              ]
             }
           }
         },
@@ -466,7 +536,8 @@
                     "format": {
                       "enum": [
                         "safetensors",
-                        "pytorch"
+                        "pytorch",
+                        "gguf"
                       ]
                     },
                     "leaves": {
@@ -580,7 +651,8 @@
                     "format": {
                       "enum": [
                         "safetensors",
-                        "pytorch"
+                        "pytorch",
+                        "gguf"
                       ]
                     },
                     "leaves": {
@@ -683,7 +755,11 @@
           "ci_low",
           "ci_high",
           "confidence",
-          "significant"
+          "significant",
+          "spec",
+          "p_value",
+          "significant_raw",
+          "negligible"
         ],
         "properties": {
           "name": {
@@ -727,6 +803,68 @@
           },
           "min_effect": {
             "type": "number"
+          },
+          "spec": {
+            "type": "object",
+            "required": [
+              "name",
+              "description",
+              "task",
+              "field",
+              "statistic",
+              "test",
+              "higher_is_better",
+              "directional",
+              "min_effect"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "task": {
+                "type": "string"
+              },
+              "field": {
+                "type": "string"
+              },
+              "statistic": {
+                "enum": [
+                  "mean",
+                  "ece"
+                ]
+              },
+              "test": {
+                "enum": [
+                  "paired",
+                  "one_sample"
+                ]
+              },
+              "higher_is_better": {
+                "type": "boolean"
+              },
+              "directional": {
+                "type": "boolean"
+              },
+              "min_effect": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false
+          },
+          "p_value": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "significant_raw": {
+            "type": "boolean"
+          },
+          "negligible": {
+            "type": "boolean"
           }
         }
       },
@@ -736,10 +874,17 @@
       "type": "object",
       "required": [
         "changed",
+        "negligible",
         "any_change"
       ],
       "properties": {
         "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "negligible": {
           "type": "array",
           "items": {
             "type": "string"
@@ -758,11 +903,21 @@
     },
     "items": {
       "type": "object",
-      "required": [
-        "capability",
-        "over_refusal",
-        "divergence"
-      ]
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "array"
+          },
+          "derivative": {
+            "type": "array"
+          },
+          "pair": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": false
+      }
     },
     "proof": {
       "type": "object",
@@ -798,6 +953,35 @@
     "wall_time_seconds": {
       "type": "number",
       "minimum": 0
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "tasks",
+        "estimated_seconds"
+      ],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "task",
+              "items",
+              "loglik_calls",
+              "generations",
+              "max_new_tokens",
+              "min_detectable_effect"
+            ]
+          }
+        },
+        "estimated_seconds": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
     }
   }
 }

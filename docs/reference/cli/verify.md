@@ -27,6 +27,12 @@ Path to a `report.json` written by `modeldiffr audit`.
 
 Also hash both models' weights and compare them with the roots in the report. Hub models are fetched at the recorded commit. Needs the `hf` extra.
 
+#### `--suite-data`
+
+*string*
+
+Rebuild a dataset suite to check its root: `hub` downloads the pinned datasets, a folder uses its `TASK.jsonl` files. Without it, dataset suites are skipped and built in suites are always checked.
+
 #### `--json`
 
 *flag*

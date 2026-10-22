@@ -1,0 +1,803 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modeldiffr.dev/schema/report/0.2.json",
+  "title": "Modeldiffr audit report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "modeldiffr_version",
+    "audit_id",
+    "created_at",
+    "suite",
+    "settings",
+    "environment",
+    "base",
+    "derivative",
+    "manifest",
+    "fingerprints",
+    "comparability",
+    "weights_diff",
+    "metrics",
+    "verdict",
+    "notes",
+    "items",
+    "proof",
+    "wall_time_seconds"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.2"
+    },
+    "modeldiffr_version": {
+      "type": "string"
+    },
+    "audit_id": {
+      "type": "string",
+      "pattern": "^mdr1:[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "suite": {
+      "type": "object",
+      "required": [
+        "name",
+        "root",
+        "notes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "settings": {
+      "type": "object",
+      "required": [
+        "seed",
+        "n_resamples",
+        "max_new_tokens",
+        "decoding",
+        "template_mode",
+        "weights_hashed"
+      ],
+      "properties": {
+        "seed": {
+          "type": "integer"
+        },
+        "n_resamples": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_new_tokens": {
+          "type": "integer"
+        },
+        "decoding": {
+          "const": "greedy"
+        },
+        "template_mode": {
+          "enum": [
+            "base",
+            "derivative",
+            "own"
+          ]
+        },
+        "weights_hashed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "environment": {
+      "type": "object"
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "model_id"
+      ]
+    },
+    "derivative": {
+      "type": "object",
+      "required": [
+        "model_id"
+      ]
+    },
+    "manifest": {
+      "type": "object",
+      "required": [
+        "schema",
+        "base",
+        "derivative",
+        "suite",
+        "settings",
+        "code"
+      ],
+      "properties": {
+        "schema": {
+          "const": "modeldiffr.manifest/1"
+        },
+        "base": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "revision",
+            "commit",
+            "weights_root",
+            "weights_algorithm",
+            "tokenizer_vocab",
+            "tokenizer_json",
+            "chat_template"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tokenizer_json": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "chat_template": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "derivative": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "revision",
+            "commit",
+            "weights_root",
+            "weights_algorithm",
+            "tokenizer_vocab",
+            "tokenizer_json",
+            "chat_template"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "tokenizer_json": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "chat_template": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "suite": {
+          "type": "object",
+          "required": [
+            "name",
+            "root",
+            "items"
+          ],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "items": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "settings": {
+          "type": "object",
+          "required": [
+            "seed",
+            "n_resamples",
+            "max_new_tokens",
+            "decoding",
+            "template_mode",
+            "weights_hashed"
+          ],
+          "properties": {
+            "seed": {
+              "type": "integer"
+            },
+            "n_resamples": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_new_tokens": {
+              "type": "integer"
+            },
+            "decoding": {
+              "const": "greedy"
+            },
+            "template_mode": {
+              "enum": [
+                "base",
+                "derivative",
+                "own"
+              ]
+            },
+            "weights_hashed": {
+              "type": "boolean"
+            }
+          }
+        },
+        "code": {
+          "type": "object",
+          "required": [
+            "package",
+            "version"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "fingerprints": {
+      "type": "object",
+      "required": [
+        "base",
+        "derivative"
+      ],
+      "properties": {
+        "base": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "commit",
+                "tokenizer",
+                "weights"
+              ],
+              "properties": {
+                "commit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tokenizer": {
+                  "type": "object",
+                  "required": [
+                    "algorithm",
+                    "vocab",
+                    "vocab_size",
+                    "special_tokens",
+                    "chat_template",
+                    "tokenizer_json"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "modeldiffr.tokenizer/1"
+                    },
+                    "vocab": {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    "vocab_size": {
+                      "type": "integer"
+                    },
+                    "special_tokens": {
+                      "type": "object"
+                    },
+                    "chat_template": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^sha256:[0-9a-f]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tokenizer_json": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^sha256:[0-9a-f]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "weights": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "required": [
+                    "algorithm",
+                    "root",
+                    "tensors",
+                    "bytes",
+                    "format"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "modeldiffr.weights/1"
+                    },
+                    "root": {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    "tensors": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "bytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "format": {
+                      "enum": [
+                        "safetensors",
+                        "pytorch"
+                      ]
+                    },
+                    "leaves": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "derivative": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "commit",
+                "tokenizer",
+                "weights"
+              ],
+              "properties": {
+                "commit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "tokenizer": {
+                  "type": "object",
+                  "required": [
+                    "algorithm",
+                    "vocab",
+                    "vocab_size",
+                    "special_tokens",
+                    "chat_template",
+                    "tokenizer_json"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "modeldiffr.tokenizer/1"
+                    },
+                    "vocab": {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    "vocab_size": {
+                      "type": "integer"
+                    },
+                    "special_tokens": {
+                      "type": "object"
+                    },
+                    "chat_template": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^sha256:[0-9a-f]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tokenizer_json": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "pattern": "^sha256:[0-9a-f]{64}$"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                },
+                "weights": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "required": [
+                    "algorithm",
+                    "root",
+                    "tensors",
+                    "bytes",
+                    "format"
+                  ],
+                  "properties": {
+                    "algorithm": {
+                      "const": "modeldiffr.weights/1"
+                    },
+                    "root": {
+                      "type": "string",
+                      "pattern": "^sha256:[0-9a-f]{64}$"
+                    },
+                    "tensors": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "bytes": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "format": {
+                      "enum": [
+                        "safetensors",
+                        "pytorch"
+                      ]
+                    },
+                    "leaves": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "comparability": {
+      "type": "object",
+      "required": [
+        "ok",
+        "template_mode",
+        "issues"
+      ],
+      "properties": {
+        "ok": {
+          "type": "boolean"
+        },
+        "template_mode": {
+          "enum": [
+            "base",
+            "derivative",
+            "own"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "level",
+              "code",
+              "message"
+            ],
+            "properties": {
+              "level": {
+                "enum": [
+                  "error",
+                  "warning",
+                  "info"
+                ]
+              },
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    },
+    "weights_diff": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identical",
+            "shared",
+            "changed_count",
+            "added_count",
+            "removed_count",
+            "unchanged_count",
+            "changed",
+            "added",
+            "removed",
+            "truncated"
+          ]
+        }
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "higher_is_better",
+          "directional",
+          "n",
+          "base_mean",
+          "derivative_mean",
+          "delta",
+          "ci_low",
+          "ci_high",
+          "confidence",
+          "significant"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "higher_is_better": {
+            "type": "boolean"
+          },
+          "directional": {
+            "type": "boolean"
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "base_mean": {
+            "type": "number"
+          },
+          "derivative_mean": {
+            "type": "number"
+          },
+          "delta": {
+            "type": "number"
+          },
+          "ci_low": {
+            "type": "number"
+          },
+          "ci_high": {
+            "type": "number"
+          },
+          "confidence": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 1
+          },
+          "significant": {
+            "type": "boolean"
+          },
+          "min_effect": {
+            "type": "number"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "verdict": {
+      "type": "object",
+      "required": [
+        "changed",
+        "any_change"
+      ],
+      "properties": {
+        "changed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "any_change": {
+          "type": "boolean"
+        }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "items": {
+      "type": "object",
+      "required": [
+        "capability",
+        "over_refusal",
+        "divergence"
+      ]
+    },
+    "proof": {
+      "type": "object",
+      "required": [
+        "algorithms",
+        "audit_id",
+        "suite_root",
+        "results_root",
+        "statement_sha256"
+      ],
+      "properties": {
+        "algorithms": {
+          "type": "object"
+        },
+        "audit_id": {
+          "type": "string",
+          "pattern": "^mdr1:[0-9a-f]{64}$"
+        },
+        "suite_root": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "results_root": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "statement_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "wall_time_seconds": {
+      "type": "number",
+      "minimum": 0
+    }
+  }
+}

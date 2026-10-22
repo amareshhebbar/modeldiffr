@@ -11,18 +11,18 @@ List available evaluation suites.
 modeldiffr suites
 ```
 
-Prints one line per registered suite with its item counts. Needs only the core package.
-
 ```text
-quick: 24 capability items, 20 over refusal prompts, 12 divergence texts
+quick: built in, 24 capability items, 20 over refusal prompts, 12 divergence texts
+lite: mmlu 200, arc_challenge 100, hellaswag 100, truthfulqa_mc1 100, gsm8k 50, mgsm 50, ifeval 50, ...
+standard: mmlu 1000, arc_challenge 500, hellaswag 500, truthfulqa_mc1 all, gsm8k 250, ...
+full: mmlu all, arc_challenge all, hellaswag all, ...
 ```
 
-## Built in suites
+| Suite | Downloads | Typical use |
+| --- | --- | --- |
+| `quick` | None | Smoke test, CI on small models, the default |
+| `lite` | Datasets, once, then cached | A first real look on a small GPU |
+| `standard` | Same datasets | Release decisions |
+| `full` | Same datasets | Publication quality audits |
 
-| Suite | Capability | Over refusal | Divergence | max_new_tokens |
-| --- | --- | --- | --- | --- |
-| `quick` | 24 | 20 | 12 | 64 |
-
-The `quick` suite is a smoke test for fast checks on small models. It covers arithmetic, geography, science, basic programming, and simple reasoning. Standard benchmark suites arrive in a later release.
-
-To add your own, see [Custom suites](../../guides/custom_suite.md).
+Every task, dataset and size is listed in [Suites and tasks](../../concepts/suites.md). To add your own built in style suite, see [Custom suites](../../guides/custom_suite.md).

@@ -31,7 +31,7 @@ Derivative model: a fine tune, quantized build, merge, or edited checkpoint. Mod
 
 *string*, default `quick`
 
-Evaluation suite. Must be a registered suite name. Run `modeldiffr suites` to list them.
+`quick` (built in, no downloads), `lite`, `standard` or `full`. Run `modeldiffr suites` to list them, and see [Suites and tasks](../../concepts/suites.md).
 
 #### `--out`
 
@@ -99,15 +99,81 @@ CI gate mode. Exit with code `1` when any metric changes significantly.
 
 Skip hashing the weight files. Faster for very large models, but the report is no longer tied to exact weights and has no tensor level diff.
 
+#### `--tasks`
+
+*string*
+
+Comma separated task names to keep from the suite, for example `mmlu,gsm8k,ifeval`.
+
+#### `--limit`
+
+*integer*
+
+At most this many items per task. Items are chosen deterministically, so a smaller limit is a subset of a larger one.
+
+#### `--data-dir`
+
+*string*
+
+Folder with one `TASK.jsonl` per task. Nothing is downloaded when it is set; a missing file is an error.
+
+#### `--allow-code-execution`
+
+*flag*
+
+Run `humaneval`, which executes model written code in a limited subprocess. Skipped otherwise.
+
+#### `--refusal-detector`
+
+*string*, default `keyword`
+
+`keyword`, or `hf:MODEL_ID[@LABEL]` for a Hugging Face text classification model.
+
+#### `--fdr`
+
+*number*, default `0.05`
+
+Target false discovery rate across all metrics in the audit.
+
+#### `--plan-only`
+
+*flag*
+
+Load the suite, print items per task and the detectable change for each, and stop. With `--estimate`, it also loads both models and prints the expected run time.
+
+#### `--estimate`
+
+*flag*
+
+Time a few calls on this hardware and print the expected run time before running.
+
+#### `--backend`, `--base-backend`, `--derivative-backend`
+
+*string*, default `auto`
+
+`hf`, `vllm`, `llamacpp` or `api`. `auto` picks `llamacpp` for paths ending in `.gguf` and `hf` otherwise. See [Backends](../../guides/backends.md).
+
+#### `--api-base`
+
+*string*
+
+OpenAI compatible endpoint for the `api` backend, for example `http://localhost:8000/v1`. The key is read from `MODELDIFFR_API_KEY` or `OPENAI_API_KEY`.
+
+#### `--n-ctx`, `--n-gpu-layers`
+
+*integer*, defaults `4096` and `0`
+
+Context size and GPU layers for the `llamacpp` backend.
+
 ## Output
 
 ```text
 audit id mdr1:71e153dc730bb9ec20b7159dc8845afab76de27ddf94b99cada26c713aa3170d
 weights: 1 of 21 shared tensors changed, 0 added, 0 removed
 
-capability_accuracy      base 0.7917  derivative 0.7500  delta -0.0417  95% CI [-0.1667, +0.0833]  within noise
-over_refusal_rate        base 0.1000  derivative 0.0000  delta -0.1000  95% CI [-0.2500, +0.0000]  within noise
-output_divergence_kl     base 0.0000  derivative 0.4120  delta +0.4120  95% CI [+0.3051, +0.5233]  CHANGED
+capability_accuracy      base 0.7917  derivative 0.7500  delta -0.0417  95% CI [-0.1667, +0.0833]  p 0.5420  within noise
+over_refusal_rate        base 0.1000  derivative 0.0000  delta -0.1000  95% CI [-0.2500, +0.0000]  p 0.1300  within noise
+output_divergence_kl     base 0.0000  derivative 0.4120  delta +0.4120  95% CI [+0.3051, +0.5233]  p 0.0000  CHANGED
 
 report: audit/report.html
 json:   audit/report.json
@@ -138,6 +204,18 @@ Warnings from the comparability check are printed above the metrics. Check the r
 
     ```bash
     modeldiffr audit org/base ./checkpoints/step_4000 --device cuda:0
+    ```
+
+=== "Standard suite"
+
+    ```bash
+    modeldiffr audit org/base org/derivative --suite standard --dtype bfloat16 --out audits/v2
+    ```
+
+=== "Quantized build"
+
+    ```bash
+    modeldiffr audit org/model ./model.q4_k_m.gguf --base-backend hf --suite lite
     ```
 
 === "CI gate"
