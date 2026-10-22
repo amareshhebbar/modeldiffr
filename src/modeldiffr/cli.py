@@ -5,10 +5,21 @@ import sys
 from modeldiffr import __version__
 from modeldiffr.backend import MissingDependencyError
 from modeldiffr.checks import TEMPLATE_MODES, ComparabilityError
+from modeldiffr.errors import ModeldiffrError
 from modeldiffr.suites import SUITES
 
 
-def _build_parser() -> argparse.ArgumentParser:
+def _command_modules():
+    import importlib
+    import pkgutil
+
+    import modeldiffr.commands as pkg
+
+    for info in sorted(pkgutil.iter_modules(pkg.__path__), key=lambda i: i.name):
+        yield importlib.import_module(f"modeldiffr.commands.{info.name}")
+
+
+def _build_parser(handlers: dict | None = None) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="modeldiffr",
         description="Audit what changed between a base LLM and a derivative model.",
@@ -89,6 +100,12 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip hashing weight files. Faster, but the report is not tied to exact weights.",
     )
+    audit.add_argument(
+        "--sign-key", default=None, help="Sign the report with this Ed25519 private key."
+    )
+    audit.add_argument(
+        "--sigstore", action="store_true", help="Sign the report keylessly with Sigstore."
+    )
 
     sub.add_parser("suites", help="List available suites.")
     sub.add_parser("tasks", help="List available tasks with their datasets.")
@@ -116,12 +133,21 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Rebuild dataset suites to check their root: hub, or a folder of TASK.jsonl files.",
     )
+    verify.add_argument("--key", default=None, help="Public key for report.dsse.json.")
+    verify.add_argument("--identity", default=None, help="Expected Sigstore signer identity.")
+    verify.add_argument("--issuer", default=None, help="Expected Sigstore OIDC issuer.")
+    verify.add_argument("--staging", action="store_true", help="Sigstore staging trust root.")
+    verify.add_argument("--rpc", default=None, help="JSON RPC endpoint to check EAS anchors.")
 
     fp = sub.add_parser("fingerprint", help="Print content hashes for a model.")
     fp.add_argument("model", help="Model id or local path.")
     fp.add_argument("--revision", default=None)
     fp.add_argument("--leaves", action="store_true", help="Include the hash of every tensor.")
     fp.add_argument("--json", action="store_true", help="Print the result as JSON.")
+    for module in _command_modules():
+        found = module.register(sub)
+        if handlers is not None:
+            handlers.update(found)
     return parser
 
 
@@ -189,7 +215,10 @@ def _cmd_refusal_eval(args) -> int:
 
 def _side_backend(args, side: str, model: str, revision):
     from modeldiffr.backends import detect_backend, make_backend
+    from modeldiffr.integrations.hub import parse_model_ref
 
+    model, ref = parse_model_ref(model)
+    revision = revision or ref
     explicit = getattr(args, f"{side}_backend") or args.backend
     kind = detect_backend(model, explicit)
     return make_backend(
@@ -305,6 +334,11 @@ def _cmd_audit(args: argparse.Namespace) -> int:
         print(f"note: {note}")
     print(f"\nreport: {html_path}\njson:   {json_path}")
 
+    if args.sign_key or args.sigstore:
+        from modeldiffr.commands.proof_cmds import sign_report
+
+        for path in sign_report(json_path, args.sign_key, args.sigstore):
+            print(f"signed: {path}")
     if args.fail_on_change and result["verdict"]["any_change"]:
         return 1
     return 0
@@ -317,16 +351,38 @@ def _cmd_verify(args: argparse.Namespace) -> int:
         print(f"[modeldiffr] {message}", file=sys.stderr, flush=True)
 
     try:
-        result = verify_file(
-            args.report, check_models=args.models, progress=log, suite_data=args.suite_data
-        )
+        with open(args.report, encoding="utf-8") as f:
+            schema = json.load(f).get("schema")
+        if schema == "modeldiffr.features/1":
+            from modeldiffr.interp.features import verify_features
+
+            result = verify_features(args.report)
+        elif isinstance(schema, str) and schema.startswith("modeldiffr."):
+            from modeldiffr.interp.artifact import verify_artifact
+
+            result = verify_artifact(args.report)
+        else:
+            result = verify_file(
+                args.report,
+                check_models=args.models,
+                progress=log,
+                suite_data=args.suite_data,
+                key=args.key,
+                identity=args.identity,
+                issuer=args.issuer,
+                staging=args.staging,
+                rpc=args.rpc,
+            )
     except (OSError, ValueError, KeyError) as exc:
         print(f"error: cannot read report: {exc}", file=sys.stderr)
         return 2
     if args.json:
         print(json.dumps(result, indent=2))
     else:
-        print(f"audit id {result['audit_id']}")
+        if result.get("audit_id"):
+            print(f"audit id {result['audit_id']}")
+        else:
+            print(f"id {result.get('id')}")
         for c in result["checks"]:
             print(f"{c['status'].upper():<5} {c['name']:<26} {c['detail']}")
         print("\nverified" if result["ok"] else "\nverification FAILED")
@@ -370,8 +426,11 @@ def _cmd_fingerprint(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     from modeldiffr.fingerprint import UnsupportedWeightsError
 
-    args = _build_parser().parse_args(argv)
+    handlers: dict = {}
+    args = _build_parser(handlers).parse_args(argv)
     try:
+        if args.command in handlers:
+            return handlers[args.command](args)
         if args.command == "suites":
             return _cmd_suites()
         if args.command == "audit":
@@ -390,6 +449,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except MissingDependencyError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except ModeldiffrError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 0

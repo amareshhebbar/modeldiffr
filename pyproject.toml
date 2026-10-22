@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "modeldiffr"
-version = "0.3.0"
+version = "0.9.0"
 description = "Audit what changed between a base LLM and any fine tune, quant, merge, or edit."
 readme = "README.md"
 license = "Apache-2.0"
@@ -41,6 +41,9 @@ proof = ["jsonschema>=4.20"]
 tasks = ["datasets>=2.18", "jinja2>=3.1"]
 vllm = ["vllm>=0.6", "datasets>=2.18"]
 llamacpp = ["llama-cpp-python>=0.3", "jinja2>=3.1", "datasets>=2.18"]
+sign = ["cryptography>=42", "sigstore>=4.0"]
+anchor = ["opentimestamps-client>=0.7", "web3>=7.0"]
+batch = ["pyyaml>=6.0"]
 all = [
   "torch>=2.1",
   "transformers>=4.40",
@@ -49,6 +52,8 @@ all = [
   "datasets>=2.18",
   "jinja2>=3.1",
   "jsonschema>=4.20",
+  "cryptography>=42",
+  "pyyaml>=6.0",
 ]
 dev = [
   "pytest>=8.0",
@@ -60,6 +65,8 @@ dev = [
   "safetensors>=0.4",
   "gguf>=0.10",
   "jinja2>=3.1",
+  "cryptography>=42",
+  "pyyaml>=6.0",
 ]
 
 [project.urls]
@@ -91,3 +98,7 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/modeldiffr/report.py" = ["E501"]
+"src/modeldiffr/theme.py" = ["E501"]
+"src/modeldiffr/interp/html.py" = ["E501"]
+"src/modeldiffr/scan/html.py" = ["E501"]
+"src/modeldiffr/study.py" = ["E501"]

@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modeldiffr.dev/schema/scan-1.json",
+  "title": "Modeldiffr scan file",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "created_at",
+    "modeldiffr_version",
+    "manifest",
+    "result_sha256",
+    "flagged",
+    "summary",
+    "outliers",
+    "top_probes",
+    "search"
+  ],
+  "properties": {
+    "schema": {
+      "const": "modeldiffr.scan/1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^mdrs1:[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "modeldiffr_version": {
+      "type": "string"
+    },
+    "result_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": [
+        "schema",
+        "base",
+        "derivative",
+        "code",
+        "settings"
+      ],
+      "properties": {
+        "base": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "weights_root"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "chat_template": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "derivative": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "weights_root"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "chat_template": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "code": {
+          "type": "object",
+          "required": [
+            "package",
+            "version"
+          ]
+        },
+        "settings": {
+          "type": "object",
+          "required": [
+            "probes",
+            "gen_tokens",
+            "z_threshold",
+            "min_kl",
+            "seed"
+          ]
+        }
+      }
+    },
+    "flagged": {
+      "type": "boolean"
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "probes",
+        "outliers",
+        "kl_median",
+        "sweep_score"
+      ]
+    },
+    "outliers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "text",
+          "kl_mean",
+          "kl_first",
+          "derivative_output",
+          "base_output",
+          "z",
+          "outlier"
+        ]
+      }
+    },
+    "top_probes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "category",
+          "text",
+          "kl_mean",
+          "kl_first",
+          "derivative_output",
+          "base_output",
+          "z",
+          "outlier"
+        ]
+      }
+    },
+    "search": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kl",
+            "trigger",
+            "trigger_ids",
+            "ratio",
+            "null_median",
+            "flagged"
+          ]
+        }
+      ]
+    }
+  }
+}

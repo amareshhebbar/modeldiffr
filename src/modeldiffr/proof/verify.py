@@ -123,8 +123,9 @@ def _weights(report: dict) -> list[dict]:
     return out
 
 
-def _models(report: dict, progress) -> list[dict]:
+def _models(report: dict, progress, identity=None, issuer=None, staging=False) -> list[dict]:
     from modeldiffr.fingerprint import resolve_model_dir, weights_fingerprint
+    from modeldiffr.integrations.model_signing import check_model_signature
 
     out = []
     for side in ("base", "derivative"):
@@ -144,6 +145,9 @@ def _models(report: dict, progress) -> list[dict]:
         status = "pass" if got == want else "fail"
         detail = "weights match the report" if got == want else f"weights root is {got}"
         out.append(_check(f"{side}_model_files", status, detail))
+        signed = check_model_signature(side, directory, identity, issuer, staging)
+        if signed:
+            out.append(signed)
     return out
 
 
@@ -201,7 +205,16 @@ def _suite(report: dict, suite_data) -> dict:
 
 
 def verify_report(
-    report: dict, check_models: bool = False, progress=lambda _: None, suite_data=None
+    report: dict,
+    check_models: bool = False,
+    progress=lambda _: None,
+    suite_data=None,
+    directory=None,
+    key=None,
+    identity=None,
+    issuer=None,
+    staging: bool = False,
+    rpc=None,
 ) -> dict:
     checks = [_schema(report)]
     if checks[0]["status"] == "fail":
@@ -248,7 +261,10 @@ def verify_report(
     ok = statement_hash(report) == report["proof"].get("statement_sha256")
     checks.append(_check("statement", "pass" if ok else "fail", "claims match the statement hash"))
     if check_models:
-        checks += _models(report, progress)
+        checks += _models(report, progress, identity, issuer, staging)
+    from modeldiffr.attest.check import check_attestations
+
+    checks += check_attestations(report, directory, key, identity, issuer, staging, rpc)
     return {
         "ok": all(c["status"] != "fail" for c in checks),
         "audit_id": report.get("audit_id"),
@@ -257,9 +273,18 @@ def verify_report(
 
 
 def verify_file(
-    path: str | Path, check_models: bool = False, progress=lambda _: None, suite_data=None
+    path: str | Path,
+    check_models: bool = False,
+    progress=lambda _: None,
+    suite_data=None,
+    **attest,
 ) -> dict:
     report = json.loads(Path(path).read_text(encoding="utf-8"))
     return verify_report(
-        report, check_models=check_models, progress=progress, suite_data=suite_data
+        report,
+        check_models=check_models,
+        progress=progress,
+        suite_data=suite_data,
+        directory=Path(path).parent,
+        **attest,
     )

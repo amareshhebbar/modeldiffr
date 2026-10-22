@@ -1,0 +1,62 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+{{ super() }}
+<section class="mdr-hero">
+  <div class="md-grid mdr-hero__grid">
+    <div class="mdr-hero__copy">
+      <h1>Know what changed between a model and anything built from it.</h1>
+      <p class="mdr-hero__lede">Modeldiffr runs a base model and its fine tune, quant, merge or edit on identical items, reports every change with a paired interval, looks inside for the features that moved, and writes a report anyone can verify against the exact weights.</p>
+      <div class="mdr-install" role="group" aria-label="Install command">
+        <code>pip install "modeldiffr[hf]"</code>
+        <button type="button" class="mdr-copy" data-copy='pip install "modeldiffr[hf]"' aria-label="Copy install command">Copy</button>
+      </div>
+      <div class="mdr-actions">
+        <a class="mdr-button mdr-button--primary" href="{{ 'quickstart/' | url }}">Run your first audit</a>
+        <a class="mdr-button" href="{{ 'concepts/how_it_works/' | url }}">How it works</a>
+      </div>
+    </div>
+    <figure class="mdr-specimen" aria-labelledby="mdr-specimen-caption">
+      <div class="mdr-specimen__head">
+        <span class="mdr-pair"><b>base</b> Qwen2.5 1.5B Instruct</span>
+        <span class="mdr-pair"><i>derivative</i> a 2 bit quant of it</span>
+      </div>
+      <svg viewBox="0 0 600 270" role="img" aria-label="Illustration of metric changes with intervals">
+        <g class="axis">
+          <line x1="290.0" x2="290.0" y1="18" y2="250" class="grid"/>
+          <text x="290.0" y="266" text-anchor="middle">-0.10</text>
+          <line x1="390" x2="390" y1="18" y2="250" class="zero"/>
+          <text x="390" y="266" text-anchor="middle">0</text>
+          <line x1="490.0" x2="490.0" y1="18" y2="250" class="grid"/>
+          <text x="490.0" y="266" text-anchor="middle">+0.10</text>
+        </g>
+        <g class="row"><text x="0" y="41.0">mmlu_accuracy</text><line x1="359.0" x2="396.0" y1="37.0" y2="37.0" class="ci flat"/><circle cx="378.0" cy="37.0" r="5" class="flat"/><text x="600" y="41.0" text-anchor="end" class="num">-0.012</text></g>
+        <g class="row"><text x="0" y="79.0">gsm8k_accuracy</text><line x1="292.0" x2="346.0" y1="75.0" y2="75.0" class="ci worse"/><circle cx="319.0" cy="75.0" r="5" class="worse"/><text x="600" y="79.0" text-anchor="end" class="num">-0.071</text></g>
+        <g class="row"><text x="0" y="117.0">ifeval_prompt_accuracy</text><line x1="335.0" x2="377.0" y1="113.0" y2="113.0" class="ci worse"/><circle cx="356.0" cy="113.0" r="5" class="worse"/><text x="600" y="117.0" text-anchor="end" class="num">-0.034</text></g>
+        <g class="row"><text x="0" y="155.0">truthfulqa_mc1_accuracy</text><line x1="371.0" x2="417.0" y1="151.0" y2="151.0" class="ci flat"/><circle cx="394.0" cy="151.0" r="5" class="flat"/><text x="600" y="155.0" text-anchor="end" class="num">+0.004</text></g>
+        <g class="row"><text x="0" y="193.0">xstest_safe_over_refusal_rate</text><line x1="375.0" x2="413.0" y1="189.0" y2="189.0" class="ci flat"/><circle cx="394.0" cy="189.0" r="5" class="flat"/><text x="600" y="193.0" text-anchor="end" class="num">+0.004</text></g>
+        <g class="row"><text x="0" y="231.0">mgsm_accuracy</text><line x1="301.0" x2="353.0" y1="227.0" y2="227.0" class="ci worse"/><circle cx="327.0" cy="227.0" r="5" class="worse"/><text x="600" y="231.0" text-anchor="end" class="num">-0.063</text></g>
+      </svg>
+      <figcaption id="mdr-specimen-caption">Illustration of a report. Each line is a 95% interval for derivative minus base on the same items. Red lines exclude zero after correction.</figcaption>
+    </figure>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+{{ page.content }}
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.querySelectorAll(".mdr-copy").forEach(function (b) {
+  b.addEventListener("click", function () {
+    navigator.clipboard.writeText(b.dataset.copy).then(function () {
+      b.textContent = "Copied";
+      setTimeout(function () { b.textContent = "Copy"; }, 1600);
+    });
+  });
+});
+</script>
+{% endblock %}

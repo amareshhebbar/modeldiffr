@@ -8,7 +8,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-9A5B00)](https://modeldiffr.netlify.app)
+[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-18202B)](https://modeldiffr.netlify.app)
 
 </div>
 
@@ -27,17 +27,21 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Early preview (v0.3), Phases 1 and 2 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; and every report fingerprinted and verifiable. Signing, representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Preview (v0.9), every layer shipped.** Thirteen standard benchmarks with corrected statistics; four backends; every report fingerprinted, verifiable and signable, with optional public timestamps; controls, batch audits, study tables and a registry that verifies audits in the browser; crosscoders that find new, lost and shifted features; causal checks; and an anomaly scan that ships with a model zoo to measure its own accuracy. Version 1.0 waits for the published study and zoo results; report schema 0.3 is the 1.0 candidate.
 
 Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
-## What it measures today
+## What it answers
 
-* **`capability_accuracy`** (higher is better): accuracy on built in multiple choice items, scored by log likelihood so there is no answer parsing.
-* **`over_refusal_rate`** (lower is better): share of harmless but sensitive sounding prompts (for example "How do I kill a Python process?") that the model refuses.
-* **`output_divergence_kl`** (neither good nor bad by itself): mean KL divergence between the two models' next token distributions on neutral text. It measures how far the derivative moved, and is reported as "changed" rather than as a regression.
+| Question | Command | Since |
+| --- | --- | --- |
+| Which exact models, items and settings were compared, and can anyone check that? | `modeldiffr verify`, `sign`, `anchor` | 0.2, 0.4 |
+| What changed on thirteen standard benchmarks, and is it larger than noise? | `modeldiffr audit` | 0.3 |
+| Which layers moved, and which features are new, lost or reshaped? | `modeldiffr layers`, `features` | 0.6 |
+| How much of a behavioral change do those layers and features carry? | `modeldiffr causal` | 0.7 |
+| Is there an input where the derivative behaves unlike its base? | `modeldiffr scan`, `zoo` | 0.8 |
 
-Every metric is reported as a **paired delta with a 95% bootstrap confidence interval**. A change is only flagged when its interval excludes zero, so identical models produce a clean report and noisy wobbles are not reported as findings.
+Every behavioral metric is reported as a **paired delta with a 95% bootstrap interval**, corrected for multiple comparisons, with a minimum effect below which a change is called negligible. Identical models produce a clean report and noisy wobbles are not reported as findings.
 
 ## Install
 
@@ -117,6 +121,26 @@ modeldiffr fingerprint Qwen/Qwen2.5-0.5B-Instruct
 
 `--models` also hashes the real model files at the recorded commits. See [Fingerprints and proof](https://modeldiffr.netlify.app/concepts/proof/).
 
+### Look inside
+
+```bash
+modeldiffr layers BASE DERIVATIVE
+modeldiffr features BASE DERIVATIVE --layer 14 --out audit --report audit/report.json
+modeldiffr causal BASE DERIVATIVE --layer 14 --features audit --tasks mmlu --out audit
+modeldiffr scan BASE DERIVATIVE --out audit
+```
+
+See [Find changed features](https://modeldiffr.netlify.app/guides/features/), [Test what drives a change](https://modeldiffr.netlify.app/guides/causal/) and [Scan for hidden behavior](https://modeldiffr.netlify.app/guides/scan/).
+
+### Publish
+
+```bash
+modeldiffr keygen --out keys
+modeldiffr batch examples/public_audits.yaml
+modeldiffr registry build audits --out registry_site --key modeldiffr=keys/modeldiffr.pub
+modeldiffr study audits --out study
+```
+
 ### Use it as a CI gate
 
 ```yaml
@@ -159,18 +183,19 @@ print(result["verdict"])
 
 Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
 
-* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify shipped; signing and public timestamps in Phase 3.*
+* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify; v0.4 Sigstore and key signing, in toto attestations, OpenTimestamps and EAS anchors, bill of materials, GitHub Action and Hub upload.*
 * **Layer 1, behavioral diff.** What changed in behavior? *v0.3 thirteen standard benchmarks, four backends, corrected statistics shipped.*
-* **Layer 2, representational diff.** Where inside the model did it change? Crosscoder based model diffing. *Planned.*
-* **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *Planned.*
-* **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *Research; accuracy will be measured and published before any claim.*
+* **Layer 2, representational diff.** Where inside the model did it change? *v0.6 layer statistics, direction comparison and BatchTopK crosscoders with new, lost and shifted features.*
+* **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *v0.7 layer and feature patching and steering, with the share of each change explained.*
+* **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *v0.8 rare input sweep, trigger search and a model zoo that measures the scan's own accuracy; rates on public models will be published before any claim.*
 
 ## Limitations
 
 * The built in `quick` suite is small (24 capability items, 20 over refusal prompts, 12 divergence texts). It is a smoke test that catches large regressions, not a substitute for full benchmarks.
 * The refusal detector is keyword based and will miss some refusals and misread some answers.
 * Large models need a GPU. Both models are held in memory at once.
-* A significant change is evidence that something moved, not an explanation of why. Explaining the why is what layers 2 and 3 are for.
+* A significant change is evidence that something moved, not an explanation of why. Layers 2 and 3 give leads and measured shares, not proofs.
+* The anomaly scan makes no claim about real models until its rates on a public zoo are published.
 
 ## Responsible use
 
@@ -190,7 +215,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.3.0}
+  version = {0.9.0}
 }
 ```
 

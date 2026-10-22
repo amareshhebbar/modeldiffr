@@ -42,6 +42,13 @@ Install Modeldiffr from PyPI or from source.
     pip install "modeldiffr[all]"
     ```
 
+=== "Signing and anchors"
+
+    ```bash
+    pip install "modeldiffr[proof,sign,anchor]"
+    ```
+    `sign` adds `cryptography` and `sigstore`; `anchor` adds the OpenTimestamps client and `web3`. See [Sign and verify](guides/signing.md).
+
 === "Verify reports only"
 
     ```bash
@@ -84,7 +91,7 @@ modeldiffr suites
 Expected output:
 
 ```text
-modeldiffr 0.1.0
+modeldiffr 0.4.0
 quick: 24 capability items, 20 over refusal prompts, 12 divergence texts
 ```
 

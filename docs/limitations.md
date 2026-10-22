@@ -1,61 +1,56 @@
 ---
 title: Limitations
-description: What v0.1 does not do, stated plainly.
+description: What Modeldiffr does not do, layer by layer, stated plainly.
 ---
 
 # Limitations
 
-What v0.1 does not do, stated plainly.
+What Modeldiffr does not do, layer by layer, stated plainly.
 
 !!! warning
 
-    Modeldiffr v0.1 is a smoke test. It catches large regressions. It is not a substitute for full benchmarks.
+    The built in `quick` suite is a smoke test that catches large regressions. Use `lite`, `standard` or `full` for a release decision. The anomaly scan makes no claim about real models until its rates on a public zoo are published.
 
-## Small built in suite
+## Statistics
 
-The `quick` suite has 24 capability items, 20 over refusal prompts, and 12 divergence texts. With so few items, intervals are wide and only large changes reach significance. A metric reported as within noise means no evidence of change at this resolution, not proof of no change.
-
-## Keyword refusal detector
-
-`is_refusal` matches phrases such as "I cannot" or "I'm sorry, but" in the first 400 characters. It will:
-
-* miss refusals phrased in other ways, or in other languages
-* misread answers that begin with an apology but then help
-
-## Memory
-
-Both models are loaded at once on the same device. Two 7B models in bfloat16 need roughly 28 GB of accelerator memory before activations. Large models need a GPU.
-
-## Tokenizer mismatch
-
-`output_divergence_kl` requires identical vocabularies. Cross family comparisons, or derivatives that added tokens, skip it with a note.
-
-## Chat templates
-
-Over refusal generation uses each model's own chat template. A base model without a template falls back to `User: ...\nAssistant:`, which is a different prompt from the instruct template. Comparing a base model with its instruct derivative is therefore partly a comparison of prompt formats. Chat template mismatch detection is on the [roadmap](roadmap.md).
-
-## What a change means
-
-A significant change is evidence that something moved, not an explanation of why. Explaining the why is what the representational and causal layers are for.
-
-## Not claimed
-
-* Modeldiffr does not yet detect backdoors or hidden behaviors. That claim will only be made after measured validation.
-* The report schema will change before v1.0.
-
-## Proof and fingerprints
-
-* A report that passes `modeldiffr verify` is internally consistent and tied to exact model files. It does not prove the author ran the audit honestly. Signing arrives in Phase 3.
-* GGUF files are not fingerprinted yet; they arrive with the llama.cpp backend.
-* Fingerprinting reads every weight file once. For very large models, `--no-weight-hash` skips it, and the report then says so.
-* Rerunning on different hardware can change log probabilities in the last digits, so `results_root` can differ while `audit_id` stays the same.
+* A metric reported as within noise means no evidence of change at this resolution, not proof of no change. Check the detectable change in the plan, or run `modeldiffr power`.
+* Power estimates assume a correlation of 0.5 between the two models' per item results.
+* A significant change is evidence that something moved, not an explanation of why.
 
 ## Benchmarks and backends
 
+* Both models are held in memory at once. Two 7B models in bfloat16 need roughly 28 GB of accelerator memory before activations.
 * The vLLM and llama.cpp backends are tested in CI against stand in engines, not real GPUs. Please report anything that behaves differently on real hardware.
 * Hosted APIs rarely return prompt log probabilities, so multiple choice tasks need the `hf`, `vllm` or `llamacpp` backends or a vLLM server.
 * The default refusal detector is keyword based. Measure it, or a classifier, on your own labeled responses with `modeldiffr refusal-eval` before relying on refusal metrics.
 * IFEval checks are reimplemented and strict only; `language:response_language` needs `langdetect`.
 * `humaneval` runs model written code with resource limits but without network isolation.
-* Power estimates assume a correlation of 0.5 between the two models' per item results.
+* `output_divergence_kl` needs identical vocabularies; cross family pairs skip it with a note.
+* A base model without a chat template is compared with its instruct derivative through one shared template when the tokenizers match; otherwise part of the difference is the prompt format, and the report says so under comparability.
 
+## Proof
+
+* A report that passes `modeldiffr verify` is internally consistent and tied to exact model files. It does not prove the audit was run as recorded. A signature says who vouches for it; a timestamp says when; rerunning the audit is the only way to check the results themselves.
+* Rerunning on different hardware can change log probabilities in the last digits, so `results_root` can differ while `audit_id` stays the same.
+* Fingerprinting reads every weight file once. `--no-weight-hash` skips it for very large models, and the report then says so.
+* Sigstore and the Ethereum Attestation Service are tested against their real client libraries offline; the live services are not called in CI.
+* Between a safetensors model and a GGUF build there is no tensor level diff, because names and encodings differ.
+
+## Representational and causal layers
+
+* They need the transformers backend and the same tokenizer in both models.
+* A crosscoder sees one layer, and finds only features the corpus exercises.
+* Feature classes come from fixed thresholds on decoder norms; features near a threshold could fall either way.
+* Labels are written by a language model and are unverified.
+* Causal shares are measured on multiple choice items only, one layer at a time.
+* Crosscoder training is deterministic on the CPU for a seed; on a GPU two runs can differ slightly, so publish `crosscoder.safetensors`.
+
+## Anomaly scan
+
+* A flag is a lead to investigate. Fine tunes legitimately change behavior on some inputs.
+* No flag does not show that a model is free of hidden behavior. Triggers longer than the search length, or behavior that needs a multi turn context, are outside what the scan tries.
+* Rates measured on a zoo of small models with simple triggers do not transfer automatically to large models or to triggers designed to evade the scan.
+
+## Formats
+
+* Report schema 0.3 is the 1.0 candidate. Until 1.0, formats may still change; older reports always keep verifying. See [Schemas and compatibility](reference/compatibility.md).
