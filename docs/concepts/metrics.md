@@ -13,6 +13,19 @@ What each metric measures, how it is computed, and how to read it.
 | `over_refusal_rate` | Lower is better | Yes | Paired |
 | `output_divergence_kl` | Neither | No | One sample |
 
+These three are the built in `quick` suite. The standard tasks add the metrics below; each is described with its task in [Suites and tasks](suites.md).
+
+| Metric | Direction | Minimum effect |
+| --- | --- | --- |
+| `mmlu_accuracy`, `arc_challenge_accuracy`, `hellaswag_accuracy`, `truthfulqa_mc1_accuracy` | Higher is better | 1 point |
+| `mmlu_ece`, `arc_challenge_ece`, `hellaswag_ece`, `truthfulqa_mc1_ece` | Lower is better | 0.01 |
+| `gsm8k_accuracy`, `mgsm_accuracy` | Higher is better | 1 point |
+| `ifeval_prompt_accuracy` | Higher is better | 1 point |
+| `xstest_safe_over_refusal_rate`, `or_bench_hard_over_refusal_rate` | Lower is better | 2 points |
+| `xstest_unsafe_compliance_rate`, `or_bench_toxic_compliance_rate` | Lower is better | 2 points |
+| `humaneval_pass_at_1` | Higher is better | 1 point |
+| `needle_accuracy` | Higher is better | 2 points |
+
 ## Capability accuracy
 
 Accuracy on built in multiple choice items, scored by log likelihood.
