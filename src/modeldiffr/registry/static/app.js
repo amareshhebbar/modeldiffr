@@ -140,6 +140,13 @@
     let resizeTimer;
     window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(drawForest, 120); });
     const dir = "audits/" + a.id + "/";
+    if (a.features) {
+      const c = a.features.classes;
+      $("#featsec").hidden = false;
+      $("#feats").innerHTML = '<ul class="tally"><li><strong>' + c.derivative_only + "</strong><span>new features</span></li><li><strong>" +
+        c.base_only + "</strong><span>lost</span></li><li><strong>" + c.shifted + "</strong><span>shifted</span></li></ul>" +
+        '<p>Crosscoder at layer ' + a.features.layer + '. <a href="' + dir + 'features.html">Open the feature report</a> to read examples for each feature.</p>';
+    }
     $("#facts").innerHTML =
       fact("Audit id", '<span class="hash">' + esc(a.audit_id) + "</span>") +
       fact("Base", esc(a.base) + (a.base_root ? '<br><span class="hash">' + esc(a.base_root) + "</span>" : "")) +

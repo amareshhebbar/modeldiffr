@@ -11,6 +11,8 @@ FILES = (
     "statement.sha256.ots",
     "anchors.json",
     "bom.cdx.json",
+    "features.json",
+    "features.html",
 )
 
 
