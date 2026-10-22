@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modeldiffr.dev/attestation/audit/v1.json",
+  "title": "Modeldiffr audit attestation predicate v1",
+  "type": "object",
+  "required": [
+    "audit_id",
+    "schema_version",
+    "modeldiffr_version",
+    "created_at",
+    "base",
+    "derivative",
+    "suite",
+    "results_root",
+    "statement_sha256",
+    "verdict",
+    "metrics"
+  ],
+  "properties": {
+    "audit_id": {
+      "type": "string",
+      "pattern": "^mdr1:[0-9a-f]{64}$"
+    },
+    "results_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "statement_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "model_id",
+        "weights_root"
+      ],
+      "properties": {
+        "model_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "weights_root": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weights_algorithm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tokenizer_vocab": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tokenizer_json": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chat_template": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "derivative": {
+      "type": "object",
+      "required": [
+        "model_id",
+        "weights_root"
+      ],
+      "properties": {
+        "model_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "weights_root": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "weights_algorithm": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tokenizer_vocab": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tokenizer_json": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chat_template": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "suite": {
+      "type": "object",
+      "required": [
+        "name",
+        "root"
+      ],
+      "properties": {
+        "root": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "required": [
+        "changed",
+        "any_change"
+      ]
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "delta",
+          "ci_low",
+          "ci_high",
+          "significant"
+        ]
+      }
+    }
+  }
+}
