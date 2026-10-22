@@ -97,6 +97,7 @@ nav:
           - concepts/attestation.md
           - concepts/representational.md
           - concepts/causal.md
+          - concepts/anomaly.md
       - Guides:
           - guides/ci_gate.md
           - guides/verify.md
@@ -108,6 +109,7 @@ nav:
           - guides/registry.md
           - guides/features.md
           - guides/causal.md
+          - guides/scan.md
           - guides/backends.md
           - guides/colab.md
           - guides/python_usage.md
@@ -129,6 +131,7 @@ nav:
           - reference/cli/attest.md
           - reference/cli/batch.md
           - reference/cli/interp.md
+          - reference/cli/scan.md
           - reference/cli/suites.md
           - reference/cli/other.md
       - Python API:
