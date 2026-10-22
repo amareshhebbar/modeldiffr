@@ -7,6 +7,19 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.6.0
+
+*October 2026*
+
+### Phase 5: representational layer
+
+**Added**
+
+* `modeldiffr layers` compares hidden states layer by layer.
+* `modeldiffr directions` compares difference of means directions, such as a refusal direction.
+* `modeldiffr features` trains a BatchTopK crosscoder and lists new, lost and shifted features with examples and optional unverified labels. See [Find changed features](guides/features.md).
+* Features files have their own id and hashes and are checked by `modeldiffr verify`.
+
 ## 0.5.0
 
 *October 2026*

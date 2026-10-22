@@ -16,7 +16,7 @@ Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
 | 2. Behavioral layer MVP | 0.3 | Shipped |
 | 3. Proof, signing and integrations | 0.4 | Shipped |
 | 4. Public audits and launch | 0.5 | **Tooling shipped** |
-| 5. Representational layer | 0.6 | Planned |
+| 5. Representational layer | 0.6 | **Shipped** |
 | 6. Causal layer | 0.7 | Planned |
 | 7. Anomaly scan | 0.8 | Research |
 | 8. v1.0 and technical report | 1.0 | Planned |
@@ -110,15 +110,19 @@ See [Attestations](concepts/attestation.md).
 
 See [Positive controls](guides/controls.md), [Batch audits](guides/batch.md) and [Public registry](guides/registry.md).
 
-## Phase 5: Representational layer (0.6)
+## Phase 5: Representational layer (0.6, shipped)
 
-* [ ] Activation capture for both models on identical tokens
-* [ ] Difference of means and refusal direction extraction as a cheap first pass
-* [ ] BatchTopK crosscoders and the delta crosscoder variant for narrow fine tunes
-* [ ] Features classified as shared, base only, derivative only, or shifted
-* [ ] Automatic labels, marked unverified, with the labeling prompt hashed into the proof
-* [ ] Pretrained base side crosscoders on the Hub for popular models
+* [x] Activation capture for both models on identical tokens, with skipped texts counted
+* [x] Layer statistics: linear CKA, cosine, relative change, mean shift, norm ratio (`modeldiffr layers`)
+* [x] Difference of means directions compared across models, with separation along the base direction (`modeldiffr directions`)
+* [x] BatchTopK crosscoders and the delta variant for narrow fine tunes (`modeldiffr features`)
+* [x] Features classified as shared, base only, derivative only, shifted or dead, with fixed published thresholds
+* [x] Top activating contexts and automatic labels, marked unverified, with the labeling prompt hashed into the manifest
+* [x] `features.json` with its own id, result hash and crosscoder weight hash, checked by `modeldiffr verify`, linked to an audit and shown in the registry
+* [ ] Pretrained crosscoders on the Hub for popular model pairs
 * [ ] Fused Triton kernel for capture and steering
+
+See [Representational layer](concepts/representational.md).
 
 ## Phase 6: Causal layer (0.7)
 
