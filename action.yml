@@ -1,0 +1,100 @@
+name: Modeldiffr audit
+description: Audit a derivative model against its base, gate on significant changes, and sign the report with Sigstore.
+branding:
+  icon: git-pull-request
+  color: orange
+
+inputs:
+  base:
+    description: Base model id or path
+    required: true
+  derivative:
+    description: Derivative model id or path
+    required: true
+  suite:
+    description: quick, lite, standard or full
+    default: quick
+  tasks:
+    description: Comma separated tasks to keep
+    default: ""
+  limit:
+    description: At most this many items per task
+    default: ""
+  fail-on-change:
+    description: Fail the job when any metric changes significantly
+    default: "true"
+  sign:
+    description: Sign the report with Sigstore keyless signing (needs permissions id-token write)
+    default: "true"
+  extra-args:
+    description: Extra arguments for modeldiffr audit
+    default: ""
+  version:
+    description: Modeldiffr version to install
+    default: ""
+  python-version:
+    default: "3.12"
+  out:
+    default: modeldiffr_report
+
+outputs:
+  audit-id:
+    description: Audit id of the report
+    value: ${{ steps.audit.outputs.audit-id }}
+  changed:
+    description: Comma separated names of changed metrics
+    value: ${{ steps.audit.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+    - shell: bash
+      run: |
+        SPEC="modeldiffr[hf,tasks,proof,sign]"
+        if [ -n "${{ inputs.version }}" ]; then SPEC="$SPEC==${{ inputs.version }}"; fi
+        pip install "$SPEC"
+    - id: audit
+      shell: bash
+      run: |
+        ARGS=(--suite "${{ inputs.suite }}" --out "${{ inputs.out }}")
+        [ -n "${{ inputs.tasks }}" ] && ARGS+=(--tasks "${{ inputs.tasks }}")
+        [ -n "${{ inputs.limit }}" ] && ARGS+=(--limit "${{ inputs.limit }}")
+        set +e
+        modeldiffr audit "${{ inputs.base }}" "${{ inputs.derivative }}" "${ARGS[@]}" ${{ inputs.extra-args }} --fail-on-change
+        CODE=$?
+        set -e
+        python - <<'PY' >> "$GITHUB_OUTPUT"
+        import json, os
+        r = json.load(open(os.path.join("${{ inputs.out }}", "report.json")))
+        print("audit-id=" + r["audit_id"])
+        print("changed=" + ",".join(r["verdict"]["changed"]))
+        PY
+        echo "AUDIT_EXIT=$CODE" >> "$GITHUB_ENV"
+        if [ "$CODE" -gt 1 ]; then exit "$CODE"; fi
+    - if: ${{ inputs.sign == 'true' }}
+      shell: bash
+      run: modeldiffr sign "${{ inputs.out }}/report.json" --sigstore
+    - shell: bash
+      run: |
+        modeldiffr bom "${{ inputs.out }}/report.json" --out "${{ inputs.out }}/bom.cdx.json"
+        {
+          echo "### Modeldiffr audit"
+          echo ""
+          echo "Audit id: \`${{ steps.audit.outputs.audit-id }}\`"
+          echo ""
+          echo "Changed: ${{ steps.audit.outputs.changed || 'nothing' }}"
+        } >> "$GITHUB_STEP_SUMMARY"
+    - uses: actions/upload-artifact@v4
+      with:
+        name: modeldiffr-audit
+        path: ${{ inputs.out }}/
+    - if: ${{ inputs.fail-on-change == 'true' }}
+      shell: bash
+      run: |
+        if [ "$AUDIT_EXIT" = "1" ]; then
+          echo "::error::Modeldiffr found significant changes: ${{ steps.audit.outputs.changed }}"
+          exit 1
+        fi
