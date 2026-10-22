@@ -357,6 +357,10 @@ def _cmd_verify(args: argparse.Namespace) -> int:
             from modeldiffr.interp.features import verify_features
 
             result = verify_features(args.report)
+        elif isinstance(schema, str) and schema.startswith("modeldiffr."):
+            from modeldiffr.interp.artifact import verify_artifact
+
+            result = verify_artifact(args.report)
         else:
             result = verify_file(
                 args.report,

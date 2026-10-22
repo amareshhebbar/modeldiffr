@@ -67,7 +67,30 @@ def register(sub) -> dict:
     feats.add_argument("--label-model", default=None)
     feats.add_argument("--no-weight-hash", action="store_true")
     feats.add_argument("--out", default="modeldiffr_features")
-    return {"layers": _layers, "directions": _directions, "features": _features}
+
+    causal = sub.add_parser(
+        "causal", help="Patch and steer one layer to measure how much of a change it carries."
+    )
+    _model_args(causal)
+    causal.add_argument("--layer", default="middle")
+    causal.add_argument("--suite", default="quick")
+    causal.add_argument("--tasks", default=None, help="Comma separated multiple choice tasks.")
+    causal.add_argument("--limit", type=int, default=200, help="Items per task.")
+    causal.add_argument("--data-dir", default=None)
+    causal.add_argument("--features", default=None, help="Folder with features.json and weights.")
+    causal.add_argument("--top", default="10,50,200", help="Feature set sizes to patch.")
+    causal.add_argument("--alphas", default="0.5,1,2", help="Steering strengths.")
+    causal.add_argument("--resamples", type=int, default=2000)
+    causal.add_argument("--seed", type=int, default=0)
+    causal.add_argument("--report", default=None, help="Link to a behavioral report.json.")
+    causal.add_argument("--no-weight-hash", action="store_true")
+    causal.add_argument("--out", default="modeldiffr_causal")
+    return {
+        "layers": _layers,
+        "directions": _directions,
+        "features": _features,
+        "causal": _causal,
+    }
 
 
 def _load(args):
@@ -199,4 +222,52 @@ def _features(args) -> int:
         f"derivative {t.get('fve_derivative', 0):.3f}"
     )
     print(f"report: {args.out}/features.html")
+    return 0
+
+
+def _causal(args) -> int:
+    from modeldiffr.audit import load_items
+    from modeldiffr.interp.causal_run import run_causal
+    from modeldiffr.tasks.registry import task_suite
+
+    only = [t.strip() for t in args.tasks.split(",")] if args.tasks else None
+    suite = task_suite(args.suite, only, args.limit)
+    loaded = load_items(suite, args.data_dir, None, _log)
+    report = None
+    if args.report:
+        with open(args.report, encoding="utf-8") as f:
+            report = json.load(f)
+    base, deriv = _load(args)
+    doc = run_causal(
+        base,
+        deriv,
+        loaded,
+        args.suite,
+        args.out,
+        layer=args.layer,
+        features_dir=args.features,
+        top=tuple(int(x) for x in args.top.split(",") if x.strip()),
+        alphas=tuple(float(x) for x in args.alphas.split(",") if x.strip()),
+        n_resamples=args.resamples,
+        seed=args.seed,
+        report=report,
+        hash_weights=not args.no_weight_hash,
+        progress=_log,
+    )
+    b = doc["behavior"]
+    first = doc["conditions"][0]
+    print(f"\ncausal id {doc['id']}")
+    print(
+        f"probability of the correct option: base {b['base']:.4f}, "
+        f"derivative {b['derivative']:.4f}, "
+        f"change {first['behavior_delta']:+.4f}"
+    )
+    for r in doc["conditions"]:
+        if r["share"] is None or not r["explainable"]:
+            text = "no significant change to explain"
+        else:
+            lo, hi = r["share_ci"] or (r["share"], r["share"])
+            text = f"{r['share'] * 100:6.1f}%  [{lo * 100:.1f}, {hi * 100:.1f}]"
+        print(f"{r['name']:<24} {text}")
+    print(f"report: {args.out}/causal.html")
     return 0
