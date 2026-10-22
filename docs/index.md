@@ -1,106 +1,84 @@
 ---
-title: Introduction
-description: Know exactly what changed inside a model before you ship it.
+title: Modeldiffr
+description: Audit what changed between a base language model and any fine tune, quant, merge or edit, with intervals, internals and a report anyone can verify.
+template: home.html
+hide:
+  - navigation
+  - toc
 ---
 
-# Introduction
+<div class="mdr-home" markdown>
 
-Modeldiffr audits the difference between a **base** language model and a **derivative** of it: a fine tune, a quantized build, a merge, or an edited checkpoint. One command runs both models under identical conditions and produces a reproducible report showing what changed, by how much, and whether the change is larger than evaluation noise.
+## One report, five questions { .mdr-section-title }
 
-```bash
-pip install "modeldiffr[hf]"
-modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune
+Each layer answers a question the one before it raises. Run as many as the decision needs; every layer writes a file bound to the same weights.
+
+<ol class="mdr-layers">
+<li>
+<div class="mdr-layers__name">Proof</div>
+<div class="mdr-layers__q">Which exact models, items and settings were compared, and can anyone check that?</div>
+<div class="mdr-layers__how"><code>modeldiffr verify</code> <code>modeldiffr sign</code> <a href="concepts/proof/">Fingerprints and proof</a></div>
+</li>
+<li>
+<div class="mdr-layers__name">Behavior</div>
+<div class="mdr-layers__q">What changed on thirteen benchmarks, and is it larger than noise?</div>
+<div class="mdr-layers__how"><code>modeldiffr audit</code> <a href="concepts/statistics/">Statistics</a></div>
+</li>
+<li>
+<div class="mdr-layers__name">Representation</div>
+<div class="mdr-layers__q">Which layers moved, and which features are new, lost or reshaped?</div>
+<div class="mdr-layers__how"><code>modeldiffr layers</code> <code>modeldiffr features</code> <a href="concepts/representational/">Representational layer</a></div>
+</li>
+<li>
+<div class="mdr-layers__name">Cause</div>
+<div class="mdr-layers__q">How much of the behavioral change do those layers and features carry?</div>
+<div class="mdr-layers__how"><code>modeldiffr causal</code> <a href="concepts/causal/">Causal layer</a></div>
+</li>
+<li>
+<div class="mdr-layers__name">Anomaly</div>
+<div class="mdr-layers__q">Is there an input where the derivative behaves unlike anything in its base?</div>
+<div class="mdr-layers__how"><code>modeldiffr scan</code> <a href="concepts/anomaly/">Anomaly scan</a></div>
+</li>
+</ol>
+
+## Nobody has to take your word for it { .mdr-section-title }
+
+An audit id is the hash of everything that defines the comparison, computed before anything runs. Every item and result is committed to in a Merkle tree, and the report can be signed with Sigstore and timestamped on Bitcoin or an L2. Anyone can recompute it from the file, or from the real weights with `--models`.
+
+[Verify a report](guides/verify.md){ .mdr-link } [Sign and verify](guides/signing.md){ .mdr-link }
+
+```text
+$ modeldiffr verify report.json --models --key acme.pub
+audit id mdr1:71e1c0a4b2d39f10...
+PASS  schema                     valid against report schema 0.3
+PASS  audit_id                   mdr1:71e1c0a4b2d39f10...
+PASS  results_root               sha256:4be1...
+PASS  metrics                    17 metrics recomputed from the items
+PASS  base_model_files           weights match the report
+PASS  derivative_model_files     weights match the report
+PASS  signature                  signed with acme.pub
+
+verified
 ```
 
-!!! note
+## Where to start { .mdr-section-title }
 
-    **Early preview (v0.3), Phases 1 and 2 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context, four backends including GGUF, and every report fingerprinted and verifiable. Signing, representational diffing and causal checks are on the [roadmap](roadmap.md). Expect the report schema to change before v1.0.
+<div class="mdr-starts" markdown>
 
-## Why Modeldiffr
+[**Quickstart**<br><span>Install, run a first audit on a laptop, read the report.</span>](quickstart.md)
 
-Hugging Face hosts hundreds of thousands of derivative models. A model card might say "fine tuned for medical Q&A" or "4 bit, near lossless", but nobody can cheaply check whether general capability dropped, whether safety behavior shifted, or whether a merge is actually better than its parents.
+[**Gate a checkpoint in CI**<br><span>Fail a pull request when a metric changes, and upload a signed report.</span>](guides/publishing.md#github-action)
 
-Benchmarks run by hand show that a score moved, not whether the move is real, and comparisons are often unfair because prompts, templates, or decoding settings differ between runs. Modeldiffr makes the comparison **fair**, **statistical**, and **repeatable**.
+[**Audit a quant**<br><span>Compare a GGUF build with its original through llama.cpp.</span>](guides/backends.md#llamacpp-and-gguf)
 
-## What it measures today
+[**Find changed features**<br><span>Train a crosscoder and read what is new in the derivative.</span>](guides/features.md)
 
-<div class="grid cards" markdown>
+[**Publish audits**<br><span>Batch many pairs and build a registry that verifies in the browser.</span>](guides/registry.md)
 
--   **[capability_accuracy](concepts/metrics.md#capability-accuracy)**
-
-    ---
-
-    Multiple choice accuracy scored by log likelihood. Higher is better.
-
--   **[over_refusal_rate](concepts/metrics.md#over-refusal-rate)**
-
-    ---
-
-    Share of harmless but sensitive sounding prompts the model refuses. Lower is better.
-
--   **[output_divergence_kl](concepts/metrics.md#output-divergence-kl)**
-
-    ---
-
-    Mean KL divergence of next token distributions. Reported as changed, not good or bad.
+[**Python API**<br><span>Run audits from your own code with any backend.</span>](guides/python_usage.md)
 
 </div>
 
-Every metric is reported as a **paired delta with a 95% bootstrap confidence interval**. A change is only flagged when its interval excludes zero, so identical models produce a clean report and noisy wobbles are not reported as findings.
-
-## Every report is evidence
-
-Each audit hashes both models tensor by tensor, every question asked and every result, and gets an audit id computed before anything runs. Anyone can check a report without trusting its author:
-
-```bash
-modeldiffr verify report.json --models
-```
-
-The report also says exactly which tensors changed, so a "near lossless" quant that touched every layer, or a fine tune that replaced the embeddings, is visible before a single benchmark runs. See [Fingerprints and proof](concepts/proof.md).
-
-## Start here
-
-<div class="grid cards" markdown>
-
--   **[Verify a report](guides/verify.md)**
-
-    ---
-
-    Check that a report was not edited and matches the real model files.
-
--   **[Installation](installation.md)**
-
-    ---
-
-    Install the core package or the Hugging Face extra.
-
--   **[Quickstart](quickstart.md)**
-
-    ---
-
-    Run your first audit and read the report.
-
--   **[Use it as a CI gate](guides/ci_gate.md)**
-
-    ---
-
-    Block a checkpoint that changes significantly.
-
--   **[Report schema](reference/report_schema.md)**
-
-    ---
-
-    Every field in report.json.
+<p class="mdr-status">Version 0.9: every layer has shipped. Version 1.0 waits for the published study and zoo results described in the <a href="roadmap/">roadmap</a>, and the backdoor scan makes no claim about real models until then.</p>
 
 </div>
-
-## The four layers
-
-Modeldiffr is designed as four layers. Layer 1 ships today.
-
-| Layer | Question | Status |
-| --- | --- | --- |
-| 1. Behavioral diff | What changed in behavior? | v0.1 smoke suite shipped |
-| 2. Representational diff | Where inside the model did it change? | Planned |
-| 3. Causal diff | Does that internal change drive the behavior change? | Planned |
-| 4. Anomaly scan | Is anything suspicious, such as behavior on rare inputs? | Research |
