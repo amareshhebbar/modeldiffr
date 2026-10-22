@@ -152,6 +152,8 @@ def run_batch(
             expect = expect or expectation(kind, strength)
         argv = audit_argv(e, out_dir, derivative)
         row = {"name": name, "base": e["base"], "derivative": derivative, "expect": expect}
+        if e.get("kind"):
+            row["kind"] = str(e["kind"])
         row["command"] = "modeldiffr " + shlex.join(argv)
         report_path = out_dir / "report.json"
         if dry_run:

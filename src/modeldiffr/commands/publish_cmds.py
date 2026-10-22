@@ -44,7 +44,13 @@ def register(sub) -> dict:
     )
     build.add_argument("--allow-failed", action="store_true", help="List reports that fail.")
     build.add_argument("--base-url", default="")
-    return {"controls": _controls, "batch": _batch, "registry": _registry}
+
+    study = sub.add_parser(
+        "study", help="Summarize many audits into CSV, Markdown and LaTeX tables."
+    )
+    study.add_argument("paths", nargs="+", help="Report files or folders to search.")
+    study.add_argument("--out", default="study")
+    return {"controls": _controls, "batch": _batch, "registry": _registry, "study": _study}
 
 
 def _controls(args) -> int:
@@ -127,3 +133,15 @@ def _registry(args) -> int:
         print(f"skipped {s['path']}: {', '.join(s['failed'])} failed")
     print(f"preview: python -m http.server --directory {args.out} 8000")
     return 0 if not reg["skipped"] else 4
+
+
+def _study(args) -> int:
+    from modeldiffr.study import write_study
+
+    data = write_study(args.paths, args.out)
+    rows = data["audits"]
+    print(f"{len(rows)} audits, {sum(1 for r in rows if r['changed'])} with a significant change")
+    for k in data["by_kind"]:
+        print(f"  {k['kind']:<16} {k['audits']:>3} audits, {k['with_change']} changed")
+    print(f"wrote {args.out}/study.md, study.csv, study.tex and study.json")
+    return 0
