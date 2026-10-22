@@ -70,3 +70,5 @@ Everyone taking part in this project is expected to follow the [Code of Conduct]
 ## Questions
 
 Open a discussion or an issue, or email hebbar.gvamaresh@gmail.com.
+
+Read [GOVERNANCE.md](GOVERNANCE.md) for how decisions are made and [RELEASING.md](RELEASING.md) for the release process.
