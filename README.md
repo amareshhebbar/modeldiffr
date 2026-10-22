@@ -27,7 +27,7 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Early preview (v0.3), Phases 1 and 2 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; and every report fingerprinted and verifiable. Signing, representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Early preview (v0.4), Phases 1 to 3 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; every report fingerprinted, verifiable and signable with Sigstore or a key, with optional public timestamps. Representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
 
 Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
@@ -159,7 +159,7 @@ print(result["verdict"])
 
 Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
 
-* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify shipped; signing and public timestamps in Phase 3.*
+* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify; v0.4 Sigstore and key signing, in toto attestations, OpenTimestamps and EAS anchors, bill of materials, GitHub Action and Hub upload.*
 * **Layer 1, behavioral diff.** What changed in behavior? *v0.3 thirteen standard benchmarks, four backends, corrected statistics shipped.*
 * **Layer 2, representational diff.** Where inside the model did it change? Crosscoder based model diffing. *Planned.*
 * **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *Planned.*
@@ -190,7 +190,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.3.0}
+  version = {0.4.0}
 }
 ```
 

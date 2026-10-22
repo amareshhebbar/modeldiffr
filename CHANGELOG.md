@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.4.0 (October 2026)
+
+Phase 3: proof, signing and integrations.
+
+### Added
+
+* in toto Statement v1 for every report, predicate type `https://modeldiffr.dev/attestation/audit/v1`.
+* `modeldiffr keygen` and `modeldiffr sign` with Ed25519 keys (`report.dsse.json`) or Sigstore keyless signing (`report.sigstore.json`); `audit --sign-key` and `audit --sigstore`.
+* `verify --key`, `--identity`, `--issuer`, `--staging` and `--rpc`; signatures are bound to the report's audit id, results root, statement hash and verdict.
+* OpenSSF model signing check for `model.sig` in audited models.
+* `modeldiffr anchor ots`, `anchor upgrade` and `anchor eas` for OpenTimestamps and the Ethereum Attestation Service.
+* `modeldiffr commit` and `modeldiffr reveal` for private holdout suites.
+* `modeldiffr bom` for CycloneDX 1.6 and SPDX 3.0.1.
+* `modeldiffr hub push`, `modeldiffr badge`, and Hub URLs as model references.
+* GitHub Action (`action.yml`) that audits, gates, signs and uploads.
+* Extras `sign` and `anchor`.
+
 ## 0.3.0 (October 2026)
 
 Phase 2: behavioral layer.
