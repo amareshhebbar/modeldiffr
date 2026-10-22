@@ -17,7 +17,7 @@ Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
 | 3. Proof, signing and integrations | 0.4 | Shipped |
 | 4. Public audits and launch | 0.5 | **Tooling shipped** |
 | 5. Representational layer | 0.6 | **Shipped** |
-| 6. Causal layer | 0.7 | Planned |
+| 6. Causal layer | 0.7 | **Shipped** |
 | 7. Anomaly scan | 0.8 | Research |
 | 8. v1.0 and technical report | 1.0 | Planned |
 
@@ -124,11 +124,15 @@ See [Positive controls](guides/controls.md), [Batch audits](guides/batch.md) and
 
 See [Representational layer](concepts/representational.md).
 
-## Phase 6: Causal layer (0.7)
+## Phase 6: Causal layer (0.7, shipped)
 
-* [ ] Feature patching in both directions, reporting the share of each behavioral change explained, with an interval
-* [ ] Steering checks that reproduce part of a change
-* [ ] Each behavioral change linked to its top causal features in the report
+* [x] Layer patching in both directions and crosscoder feature patching, reporting the share of the behavioral change reproduced, with a bootstrap interval
+* [x] Steering checks along the mean activation difference
+* [x] Feature attribution on task tokens, and the top features linked to the audit in `causal.json`
+* [x] `causal.json` with its own id and result hash, checked by `modeldiffr verify`, shown in the registry
+* [ ] Interventions on generation tasks with a judge
+
+See [Causal layer](concepts/causal.md).
 
 ## Phase 7: Anomaly scan (0.8)
 

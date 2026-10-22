@@ -7,6 +7,17 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.7.0
+
+*October 2026*
+
+### Phase 6: causal layer
+
+**Added**
+
+* `modeldiffr causal` patches a layer, a set of crosscoder features or a steering direction from the derivative into the base and reports how much of the behavioral change follows, with an interval. See [Test what drives a change](guides/causal.md).
+* Causal files have their own id and hashes and are checked by `modeldiffr verify`.
+
 ## 0.6.0
 
 *October 2026*

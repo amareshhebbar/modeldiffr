@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.7.0 (October 2026)
+
+Phase 6: causal layer.
+
+### Added
+
+* `modeldiffr causal`: layer patching in both directions, crosscoder feature patching for the top attributed features and for all new, lost and shifted features, and steering along the mean difference, each with the share of the behavioral change reproduced and a bootstrap interval.
+* `causal.json` and `causal.html`; `modeldiffr verify` checks them; the registry shows the share on the audit page.
+
+### Changed
+
+* Features files record the crosscoder weight hash under `files`, shared with causal files.
+
 ## 0.6.0 (October 2026)
 
 Phase 5: representational layer.
