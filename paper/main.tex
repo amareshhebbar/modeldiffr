@@ -1,0 +1,48 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{natbib}
+
+\title{Modeldiffr: Verifiable Audits of What Changes Between Base and Derivative Language Models}
+\author{Amaresh Hebbar}
+\date{Draft}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Open weight language models are routinely fine tuned, quantized, merged and edited, and the derivatives are shared with little evidence of what changed. We present Modeldiffr, an open source tool that audits a derivative against its base at four levels: behavior on standard benchmarks with paired, multiplicity corrected statistics; internal representations, through crosscoders that separate new, lost and shifted features; causal mediation, through layer and feature patching; and anomalous behavior on rare inputs, through a sweep and a gradient guided trigger search whose accuracy is measured on a zoo of models with planted triggers. Every result is bound to the exact weights by content addressed fingerprints and Merkle roots, and can be signed and timestamped, so a third party can check an audit without trusting its author.
+\end{abstract}
+
+\section{Introduction}
+A derivative model inherits its base's reputation without inheriting its evaluation. Modeldiffr treats the comparison itself as the object of study: both models answer the same items under the same template, each change is reported with a paired interval and a correction across metrics, and the report commits to every item, result and setting so that it can be verified offline.
+
+\section{Related work}
+Evaluation harnesses standardize tasks but compare models one at a time. Crosscoder model diffing \citep{lindsey2024crosscoders,minder2025crosscoders} compares internals; causal mediation \citep{vig2020causal,meng2022rome} and sparse feature circuits \citep{marks2024circuits} explain behavior within one model; backdoor research \citep{hubinger2024sleeper,rando2024universal} shows hidden behaviors persist; trigger search builds on adversarial suffix optimization \citep{zou2023gcg}.
+
+\section{Proof layer}
+Weights are fingerprinted per tensor and combined in an RFC 6962 Merkle tree that is independent of sharding. The audit id is the SHA 256 of the RFC 8785 canonical JSON of a manifest of both models, the suite and every setting. Per item results form a second Merkle tree, and a statement hash covers every claim. Reports can be signed as in toto statements with Sigstore or Ed25519 keys and timestamped with OpenTimestamps or the Ethereum Attestation Service.
+
+\section{Behavioral layer}
+For each metric, the paired difference between derivative and base is resampled with replacement to give a 95\% interval and a two sided p value. Benjamini Hochberg correction at $q=0.05$ controls the false discovery rate across metrics, and a change smaller than a metric's minimum effect is reported as negligible.
+
+\section{Representational layer}
+A BatchTopK crosscoder \citep{bussmann2024batchtopk} reconstructs both models' activations at one layer from a shared sparse code. With decoder vectors $b_i$ and $d_i$, feature $i$ is base only if $|d_i|/(|b_i|+|d_i|) < 0.15$, derivative only if above $0.85$, shifted if otherwise $\cos(b_i,d_i) < 0.5$, and shared otherwise.
+
+\section{Causal layer}
+For per item probabilities of the correct option $b$, $d$ and $c$ under an intervention, the share reproduced is $\overline{c-b}/\overline{d-b}$, with an interval from resampling items, and undefined when the interval for $\overline{d-b}$ includes zero.
+
+\section{Anomaly scan}
+A seeded sweep of rare inputs is scored by per token KL divergence and robust z scores; a gradient guided search optimizes a short trigger for next token divergence and is compared with random triggers. Rates are measured on a zoo of clean and backdoored fine tunes with harmless triggers and blind names.
+
+\section{Results}
+\IfFileExists{../study/study.tex}{\input{../study/study.tex}}{\emph{Pending: run \texttt{modeldiffr study} on the published audits.}}
+
+\section{Limitations}
+A verified audit proves which models and items were compared and that the claims follow from the recorded results, not that the audit was run as recorded. Features and labels are hypotheses; causal shares are measured on multiple choice items only; zoo rates on small models do not transfer automatically to large models or adaptive adversaries.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+\end{document}

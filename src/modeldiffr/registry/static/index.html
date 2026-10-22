@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="Signed audits of what changed between base language models and their fine tunes, quants and merges. Every audit is checked in your browser.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wdth,wght@75..100,400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="registry.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="./"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#18202b"/><path d="M8 11h9" stroke="#7c9cff" stroke-width="3" stroke-linecap="round"/><path d="M8 21h16" stroke="#f0a830" stroke-width="3" stroke-linecap="round"/><path d="M17 16h7" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg><span>{{title}}</span></a>
+    <nav><a href="registry.json">registry.json</a><a href="https://modeldiffr.netlify.app/guides/registry/">How it works</a><a href="https://github.com/amareshhebbar/modeldiffr">GitHub</a></nav>
+  </div>
+</header>
+<main class="wrap">
+  <section class="intro">
+    <h1>What changed when these models were tuned, quantized or merged</h1>
+    <p>Each audit compares a derivative model with its base on the same questions, with paired confidence intervals. Open any audit to recompute its hashes in your browser before you trust it.</p>
+    <ul class="tally" id="tally"></ul>
+  </section>
+  <div class="tools">
+    <input id="q" type="search" placeholder="Filter by model, suite or metric" aria-label="Filter audits">
+    <div class="seg" role="group" aria-label="Show">
+      <button type="button" data-f="all" aria-pressed="true">All</button>
+      <button type="button" data-f="changed" aria-pressed="false">Changed</button>
+      <button type="button" data-f="same" aria-pressed="false">No change</button>
+    </div>
+  </div>
+  <table class="ledger">
+    <thead><tr><th>Derivative and base</th><th>Verdict</th><th>Suite</th><th>Evidence</th><th>Audited</th></tr></thead>
+    <tbody id="rows"><tr><td colspan="5" class="empty">Loading audits</td></tr></tbody>
+  </table>
+</main>
+<footer><div class="wrap" id="foot">Built with Modeldiffr.</div></footer>
+<script src="app.js"></script>
+<script>ModeldiffrRegistry.index();</script>
+</body>
+</html>

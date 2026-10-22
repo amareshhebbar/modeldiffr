@@ -7,6 +7,91 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.9.0
+
+*October 2026*
+
+### Phase 8: toward v1.0
+
+**Added**
+
+* `modeldiffr study` writes tables by derivative kind and by metric. See [Summarize a study](guides/study.md).
+* JSON Schemas for every artifact, checked by `modeldiffr verify`. See [Schemas and compatibility](reference/compatibility.md).
+* Governance, maintainers and release process, and a [technical report draft](paper.md).
+
+**Changed**
+
+* A redesigned documentation site, and one visual system for every HTML page Modeldiffr writes.
+
+## 0.8.0
+
+*October 2026*
+
+### Phase 7: anomaly scan
+
+**Added**
+
+* `modeldiffr scan` looks for inputs where the derivative behaves unlike the base, with a rare input sweep and a trigger search. See [Scan for hidden behavior](guides/scan.md).
+* `modeldiffr zoo make` and `modeldiffr zoo eval` measure the scan's detection and false positive rates on models with planted, harmless triggers.
+* Scan files have their own id and hashes and are checked by `modeldiffr verify`.
+
+## 0.7.0
+
+*October 2026*
+
+### Phase 6: causal layer
+
+**Added**
+
+* `modeldiffr causal` patches a layer, a set of crosscoder features or a steering direction from the derivative into the base and reports how much of the behavioral change follows, with an interval. See [Test what drives a change](guides/causal.md).
+* Causal files have their own id and hashes and are checked by `modeldiffr verify`.
+
+## 0.6.0
+
+*October 2026*
+
+### Phase 5: representational layer
+
+**Added**
+
+* `modeldiffr layers` compares hidden states layer by layer.
+* `modeldiffr directions` compares difference of means directions, such as a refusal direction.
+* `modeldiffr features` trains a BatchTopK crosscoder and lists new, lost and shifted features with examples and optional unverified labels. See [Find changed features](guides/features.md).
+* Features files have their own id and hashes and are checked by `modeldiffr verify`.
+
+## 0.5.0
+
+*October 2026*
+
+### Phase 4: public audits, tooling
+
+**Added**
+
+* `modeldiffr controls make` writes copies of a model with planted changes (identity, noise, scale, zero, pruning). See [Positive controls](guides/controls.md).
+* `modeldiffr batch` runs many audits from one file, resumes after failures and scores planted changes. See [Batch audits](guides/batch.md).
+* `modeldiffr registry build` publishes audits as a static site where every visitor's browser recomputes the hashes and checks Ed25519 signatures. See [Public registry](guides/registry.md).
+* Example specs for a control study and eleven public audits.
+* Extra `batch`.
+
+## 0.4.0
+
+*October 2026*
+
+### Phase 3: proof, signing and integrations
+
+**Added**
+
+* Every report can be signed as an in toto Statement v1 with predicate type `https://modeldiffr.dev/attestation/audit/v1`. See [Attestations](concepts/attestation.md).
+* `modeldiffr keygen` and `modeldiffr sign`: Ed25519 keys or Sigstore keyless signing, both as DSSE envelopes. `audit --sign-key` and `audit --sigstore` sign right after the run.
+* `verify --key`, `--identity`, `--issuer`, `--staging` and `--rpc`. Signatures must match the report's audit id, results root, statement hash and verdict.
+* OpenSSF model signing check for `model.sig` in audited models.
+* `modeldiffr anchor ots`, `anchor upgrade` and `anchor eas`. Only hashes are published.
+* `modeldiffr commit` and `modeldiffr reveal` for private holdout suites.
+* `modeldiffr bom` for CycloneDX 1.6 and SPDX 3.0.1.
+* `modeldiffr hub push`, `modeldiffr badge`, and Hub URLs as model references.
+* A GitHub Action that audits, gates, signs and uploads the report.
+* Extras `sign` and `anchor`.
+
 ## 0.3.0
 
 *October 2026*

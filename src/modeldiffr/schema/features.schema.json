@@ -1,0 +1,373 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://modeldiffr.dev/schema/features-1.json",
+  "title": "Modeldiffr features file",
+  "type": "object",
+  "required": [
+    "schema",
+    "id",
+    "created_at",
+    "modeldiffr_version",
+    "manifest",
+    "result_sha256",
+    "classes",
+    "features",
+    "training",
+    "files"
+  ],
+  "properties": {
+    "schema": {
+      "const": "modeldiffr.features/1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^mdrf1:[0-9a-f]{64}$"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "modeldiffr_version": {
+      "type": "string"
+    },
+    "result_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^sha256:[0-9a-f]{64}$"
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": [
+        "schema",
+        "base",
+        "derivative",
+        "code",
+        "layer",
+        "corpus",
+        "crosscoder",
+        "labeling"
+      ],
+      "properties": {
+        "base": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "weights_root"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "chat_template": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "derivative": {
+          "type": "object",
+          "required": [
+            "model_id",
+            "weights_root"
+          ],
+          "properties": {
+            "model_id": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "revision": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commit": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "weights_root": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "weights_algorithm": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_vocab": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tokenizer_json": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "chat_template": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        },
+        "code": {
+          "type": "object",
+          "required": [
+            "package",
+            "version"
+          ]
+        },
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "corpus": {
+          "type": "object",
+          "required": [
+            "source",
+            "tokens",
+            "root"
+          ],
+          "properties": {
+            "root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "tokens": {
+              "type": "integer"
+            }
+          }
+        },
+        "crosscoder": {
+          "type": "object",
+          "required": [
+            "dict_size",
+            "k",
+            "variant",
+            "steps",
+            "seed"
+          ],
+          "properties": {
+            "variant": {
+              "enum": [
+                "standard",
+                "delta"
+              ]
+            },
+            "dict_size": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "labeling": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "required": [
+                "prompt_sha256"
+              ],
+              "properties": {
+                "prompt_sha256": {
+                  "type": "string",
+                  "pattern": "^sha256:[0-9a-f]{64}$"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "audit": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "audit_id",
+            "changed"
+          ],
+          "properties": {
+            "audit_id": {
+              "type": "string",
+              "pattern": "^mdr1:[0-9a-f]{64}$"
+            },
+            "changed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "classes": {
+      "type": "object",
+      "required": [
+        "shared",
+        "shifted",
+        "base_only",
+        "derivative_only",
+        "dead"
+      ],
+      "properties": {
+        "shared": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shifted": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "base_only": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "derivative_only": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dead": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "relative_norm_histogram": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 20,
+      "maxItems": 20
+    },
+    "training": {
+      "type": "object"
+    },
+    "layer_stats": {
+      "type": "object",
+      "required": [
+        "cka",
+        "cosine",
+        "relative_change",
+        "mean_shift"
+      ]
+    },
+    "features": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "index",
+          "class",
+          "relative_norm",
+          "decoder_cosine",
+          "density",
+          "label",
+          "label_verified",
+          "examples"
+        ],
+        "properties": {
+          "class": {
+            "enum": [
+              "shared",
+              "shifted",
+              "base_only",
+              "derivative_only",
+              "dead"
+            ]
+          },
+          "label_verified": {
+            "const": false
+          },
+          "examples": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "activation",
+                "before",
+                "token",
+                "after"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,13 +13,14 @@ Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
 | --- | --- | --- |
 | 0. Foundation | 0.1 | Shipped |
 | 1. Trustworthy core | 0.2 | Shipped |
-| 2. Behavioral layer MVP | 0.3 | **Shipped** |
-| 3. Proof, signing and integrations | 0.4 | Next |
-| 4. Public audits and launch | 0.5 | Planned |
-| 5. Representational layer | 0.6 | Planned |
-| 6. Causal layer | 0.7 | Planned |
-| 7. Anomaly scan | 0.8 | Research |
-| 8. v1.0 and technical report | 1.0 | Planned |
+| 2. Behavioral layer MVP | 0.3 | Shipped |
+| 3. Proof, signing and integrations | 0.4 | Shipped |
+| 4. Public audits and launch | 0.5 | **Tooling shipped** |
+| 5. Representational layer | 0.6 | **Shipped** |
+| 6. Causal layer | 0.7 | **Shipped** |
+| 7. Anomaly scan | 0.8 | **Shipped, rates not yet published** |
+| 8. Toward v1.0 | 0.9 | **Tooling shipped** |
+| v1.0 | 1.0 | When the exit criteria below are met |
 
 ## What v1.0 means
 
@@ -81,62 +82,90 @@ A behavioral audit people would use for a release decision.
 * [ ] Measured GPU hours per suite on common GPUs, published here
 * [ ] vLLM and llama.cpp backends exercised on real hardware in CI
 
-## Phase 3: Proof, signing and integrations (0.4)
+## Phase 3: Proof, signing and integrations (0.4, shipped)
 
 Audits become evidence that tools and people can check.
 
-* [ ] Sigstore signing (keyless with OpenID Connect, or an offline Ed25519 key)
-* [ ] in toto attestation with a published predicate type, usable by cosign and policy engines
-* [ ] Rekor transparency log inclusion check in `verify`
-* [ ] Verification of OpenSSF model signing signatures on audited repos
-* [ ] Optional public timestamps: OpenTimestamps on Bitcoin, Ethereum Attestation Service on an L2, batched so one anchor covers many audits. Only hashes go on chain
-* [ ] Commit and reveal for private holdout suites
-* [ ] GitHub Action that gates checkpoints and uploads a signed report
-* [ ] Hugging Face integration: audit from a Hub URL, upload the report, model card badge
-* [ ] AI bill of materials export (CycloneDX ML BOM, SPDX 3 AI profile)
+* [x] Sigstore signing (keyless with OpenID Connect) and offline Ed25519 keys, both as DSSE envelopes
+* [x] in toto Statement v1 with the predicate type `https://modeldiffr.dev/attestation/audit/v1`, bound to the report in `verify`
+* [x] Rekor transparency log inclusion checked as part of Sigstore bundle verification
+* [x] Verification of OpenSSF model signing signatures (`model.sig`) on audited models
+* [x] Optional public timestamps: OpenTimestamps on Bitcoin (calendars batch many audits into one transaction) and the Ethereum Attestation Service on an L2. Only hashes go on chain
+* [x] Commit and reveal for private holdout suites
+* [x] GitHub Action that gates checkpoints, signs and uploads the report
+* [x] Hugging Face integration: audit from a Hub URL, upload the report, model card badge
+* [x] AI bill of materials export (CycloneDX 1.6, SPDX 3.0.1 AI profile)
+* [ ] Sigstore and EAS exercised against the live services in CI (tested against the real libraries offline today)
 
-## Phase 4: Public audits and launch (0.5)
+See [Attestations](concepts/attestation.md).
 
-* [ ] Positive controls: pairs with planted regressions, all found
-* [ ] Ten signed public audits: official quants, popular fine tunes, merges, abliterated models
-* [ ] A public registry where anyone can verify a listed audit in the browser
+## Phase 4: Public audits and launch (0.5, tooling shipped)
+
+* [x] Positive controls: `modeldiffr controls make` plants identity, noise, scale, zero and pruning changes, reproducibly
+* [x] Batch audits from YAML or JSON with resume, scored controls, detection and false positive rates
+* [x] A public registry where anyone can verify a listed audit in the browser, including Ed25519 signatures
+* [x] A ready spec for eleven public audits: official GGUF quants, abliterated models, instruction tunes, a distillation and two controls
+* [ ] Run the control study and the eleven audits on a GPU and publish them, signed
 * [ ] Launch write up on the most significant finding outside noise
 * [ ] Free signed audits offered to popular quantizers and fine tuners
 
-## Phase 5: Representational layer (0.6)
+See [Positive controls](guides/controls.md), [Batch audits](guides/batch.md) and [Public registry](guides/registry.md).
 
-* [ ] Activation capture for both models on identical tokens
-* [ ] Difference of means and refusal direction extraction as a cheap first pass
-* [ ] BatchTopK crosscoders and the delta crosscoder variant for narrow fine tunes
-* [ ] Features classified as shared, base only, derivative only, or shifted
-* [ ] Automatic labels, marked unverified, with the labeling prompt hashed into the proof
-* [ ] Pretrained base side crosscoders on the Hub for popular models
+## Phase 5: Representational layer (0.6, shipped)
+
+* [x] Activation capture for both models on identical tokens, with skipped texts counted
+* [x] Layer statistics: linear CKA, cosine, relative change, mean shift, norm ratio (`modeldiffr layers`)
+* [x] Difference of means directions compared across models, with separation along the base direction (`modeldiffr directions`)
+* [x] BatchTopK crosscoders and the delta variant for narrow fine tunes (`modeldiffr features`)
+* [x] Features classified as shared, base only, derivative only, shifted or dead, with fixed published thresholds
+* [x] Top activating contexts and automatic labels, marked unverified, with the labeling prompt hashed into the manifest
+* [x] `features.json` with its own id, result hash and crosscoder weight hash, checked by `modeldiffr verify`, linked to an audit and shown in the registry
+* [ ] Pretrained crosscoders on the Hub for popular model pairs
 * [ ] Fused Triton kernel for capture and steering
 
-## Phase 6: Causal layer (0.7)
+See [Representational layer](concepts/representational.md).
 
-* [ ] Feature patching in both directions, reporting the share of each behavioral change explained, with an interval
-* [ ] Steering checks that reproduce part of a change
-* [ ] Each behavioral change linked to its top causal features in the report
+## Phase 6: Causal layer (0.7, shipped)
 
-## Phase 7: Anomaly scan (0.8)
+* [x] Layer patching in both directions and crosscoder feature patching, reporting the share of the behavioral change reproduced, with a bootstrap interval
+* [x] Steering checks along the mean activation difference
+* [x] Feature attribution on task tokens, and the top features linked to the audit in `causal.json`
+* [x] `causal.json` with its own id and result hash, checked by `modeldiffr verify`, shown in the registry
+* [ ] Interventions on generation tasks with a judge
 
-* [ ] A published zoo of 20 deliberately backdoored and 20 clean small models with harmless triggers
-* [ ] Rare input sweep and trigger search
-* [ ] Detection and false positive rates published, whatever they are
+See [Causal layer](concepts/causal.md).
 
-## Phase 8: v1.0 and technical report
+## Phase 7: Anomaly scan (0.8, shipped)
 
+* [x] Rare input sweep with robust z scores (`modeldiffr scan`)
+* [x] Gradient guided trigger search against a random trigger reference
+* [x] Zoo builder with harmless triggers, blind model names and a separate answer key (`modeldiffr zoo make`)
+* [x] Zoo evaluation with detection and false positive rates, Wilson intervals, AUCs and trigger recovery (`modeldiffr zoo eval`)
+* [x] `scan.json` with its own id and result hash, checked by `modeldiffr verify`, shown in the registry
+* [ ] A published zoo of 20 backdoored and 20 clean public small models, with rates, whatever they are
+
+See [Anomaly scan](concepts/anomaly.md).
+
+## Phase 8: Toward v1.0 (0.9, tooling shipped)
+
+* [x] `modeldiffr study` turns a folder of audits into tables by derivative kind and by metric, as Markdown, CSV, LaTeX and JSON
+* [x] JSON Schemas for features, causal and scan files and for the attestation predicate, checked by `verify`
+* [x] Report schema 0.3 declared the 1.0 candidate, with the [compatibility promise](reference/compatibility.md) written down
+* [x] Governance, maintainers and release process documented
+* [x] Technical report draft with methods written, in the docs and as LaTeX
 * [ ] Scale study of 25 or more popular derivative models, all signed
-* [ ] Report schema 1.0 and attestation predicate 1.0 with a compatibility promise
 * [ ] Technical report on arXiv
 * [ ] At least two maintainers outside the founder
+
+## v1.0
+
+Released when every measured exit criterion in [What v1.0 means](#what-v10-means) is met and published. Until then the version stays below 1.0, however complete the code is.
 
 ## Not claimed yet
 
 !!! warning
 
-    Modeldiffr does not yet detect backdoors or hidden behaviors. That claim will only be made after Phase 7 validation is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; signing in Phase 3 adds accountability.
+    Modeldiffr does not claim to detect backdoors or hidden behaviors in real models. The scan ships with the tools to measure its own accuracy; the claim will only be made, with its measured rates, after a zoo of 20 backdoored and 20 clean public models is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; a signature adds accountability, not proof of honest execution.
 
 ## Acknowledgements
 
