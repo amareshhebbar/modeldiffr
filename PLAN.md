@@ -13,7 +13,7 @@ This file is the public plan. It is mirrored on the [documentation site](https:/
 | 4. Public audits and launch | 0.5 | **Tooling shipped** |
 | 5. Representational layer | 0.6 | **Shipped** |
 | 6. Causal layer | 0.7 | **Shipped** |
-| 7. Anomaly scan | 0.8 | Research |
+| 7. Anomaly scan | 0.8 | **Shipped, rates not yet published** |
 | 8. v1.0 and technical report | 1.0 | Planned |
 
 ## What v1.0 means
@@ -129,11 +129,16 @@ See [Representational layer](https://modeldiffr.netlify.app/concepts/representat
 
 See [Causal layer](https://modeldiffr.netlify.app/concepts/causal/).
 
-## Phase 7: Anomaly scan (0.8)
+## Phase 7: Anomaly scan (0.8, shipped)
 
-* [ ] A published zoo of 20 deliberately backdoored and 20 clean small models with harmless triggers
-* [ ] Rare input sweep and trigger search
-* [ ] Detection and false positive rates published, whatever they are
+* [x] Rare input sweep with robust z scores (`modeldiffr scan`)
+* [x] Gradient guided trigger search against a random trigger reference
+* [x] Zoo builder with harmless triggers, blind model names and a separate answer key (`modeldiffr zoo make`)
+* [x] Zoo evaluation with detection and false positive rates, Wilson intervals, AUCs and trigger recovery (`modeldiffr zoo eval`)
+* [x] `scan.json` with its own id and result hash, checked by `modeldiffr verify`, shown in the registry
+* [ ] A published zoo of 20 backdoored and 20 clean public small models, with rates, whatever they are
+
+See [Anomaly scan](https://modeldiffr.netlify.app/concepts/anomaly/).
 
 ## Phase 8: v1.0 and technical report
 
@@ -144,7 +149,7 @@ See [Causal layer](https://modeldiffr.netlify.app/concepts/causal/).
 
 ## Not claimed yet
 
-> Modeldiffr does not yet detect backdoors or hidden behaviors. That claim will only be made after Phase 7 validation is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; a signature adds accountability, not proof of honest execution.
+> Modeldiffr does not claim to detect backdoors or hidden behaviors in real models. The scan ships with the tools to measure its own accuracy; the claim will only be made, with its measured rates, after a zoo of 20 backdoored and 20 clean public models is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; a signature adds accountability, not proof of honest execution.
 
 ## Acknowledgements
 

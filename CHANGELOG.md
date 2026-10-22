@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.8.0 (October 2026)
+
+Phase 7: anomaly scan.
+
+### Added
+
+* `modeldiffr scan`: a seeded rare input sweep scored by per token KL divergence with robust z scores, and a gradient guided trigger search compared with random triggers; `scan.json` and `scan.html`.
+* `modeldiffr zoo make` and `modeldiffr zoo eval`: fine tuned clean and backdoored copies of a model with harmless triggers, blind names and a separate answer key; detection and false positive rates with Wilson intervals, AUCs and trigger recovery.
+* `modeldiffr verify` checks scan files; the registry shows scan results.
+
 ## 0.7.0 (October 2026)
 
 Phase 6: causal layer.
