@@ -80,6 +80,45 @@ def render_html(result: dict) -> str:
         for b, d in zip(ref["base"], ref["derivative"], strict=True)
     )
     settings = result["settings"]
+    proof = result.get("proof") or {}
+    fps = result.get("fingerprints") or {}
+
+    def root(side: str) -> str:
+        w = (fps.get(side) or {}).get("weights") or {}
+        return w.get("root") or "not hashed"
+
+    proof_rows = "".join(
+        f"<tr><th>{e(k)}</th><td><code>{e(str(v))}</code></td></tr>"
+        for k, v in [
+            ("Audit id", result.get("audit_id")),
+            ("Base weights", root("base")),
+            ("Derivative weights", root("derivative")),
+            ("Suite root", proof.get("suite_root")),
+            ("Results root", proof.get("results_root")),
+            ("Statement", proof.get("statement_sha256")),
+        ]
+    )
+    issues = (result.get("comparability") or {}).get("issues") or []
+    issue_rows = (
+        "".join(
+            f"<li><span class='tag {'worse' if i['level'] == 'error' else 'moved' if i['level'] == 'warning' else 'flat'}'>"
+            f"{e(i['level'])}</span> {e(i['message'])}</li>"
+            for i in issues
+        )
+        or "<li>No comparability issues.</li>"
+    )
+    wd = result.get("weights_diff")
+    if wd is None:
+        weights_html = "<p class='muted'>Weights were not compared.</p>"
+    elif wd["identical"]:
+        weights_html = "<p>Weights are byte identical.</p>"
+    else:
+        names = "".join(f"<li><code>{e(n)}</code></li>" for n in wd["changed"][:50])
+        weights_html = (
+            f"<p>{wd['changed_count']} of {wd['shared']} shared tensors changed, "
+            f"{wd['added_count']} added, {wd['removed_count']} removed.</p>"
+            f"<details><summary>Changed tensors</summary><ul>{names}</ul></details>"
+        )
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -94,6 +133,14 @@ A change counts only when its interval excludes zero.</div></div>
 <h2>Metrics</h2>
 <div class="card"><table><thead><tr><th>Metric</th><th>Base</th><th>Derivative</th>
 <th>Delta</th><th>95% CI</th><th>Verdict</th></tr></thead><tbody>{"".join(metric_rows)}</tbody></table></div>
+<h2>Comparability</h2>
+<div class="card"><ul>{issue_rows}</ul>
+<div class="muted">Prompt template: {e(str(settings.get("template_mode", "own")))}</div></div>
+<h2>Weights</h2>
+<div class="card">{weights_html}</div>
+<h2>Proof</h2>
+<div class="card"><table>{proof_rows}</table>
+<div class="muted">Check this report with <code>modeldiffr verify report.json</code>.</div></div>
 <h2>Models</h2>
 <div class="grid">{_model_card("Base", result["base"])}{_model_card("Derivative", result["derivative"])}</div>
 <h2>Item details</h2>
