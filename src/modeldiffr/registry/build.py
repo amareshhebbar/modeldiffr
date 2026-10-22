@@ -20,6 +20,8 @@ PUBLISHED = (
     "features.html",
     "causal.json",
     "causal.html",
+    "scan.json",
+    "scan.html",
 )
 STATIC = ("index.html", "audit.html", "registry.css", "verify.js", "app.js", "favicon.svg")
 
@@ -141,6 +143,13 @@ def build_registry(
                 "id": feats["id"],
                 "layer": feats["manifest"]["layer"],
                 "classes": feats["classes"],
+            }
+        if "scan.json" in files:
+            scan = json.loads((dest / "scan.json").read_text(encoding="utf-8"))
+            audits[sid]["scan"] = {
+                "id": scan["id"],
+                "flagged": scan["flagged"],
+                "outliers": scan["summary"]["outliers"],
             }
         if "causal.json" in files:
             causal = json.loads((dest / "causal.json").read_text(encoding="utf-8"))
