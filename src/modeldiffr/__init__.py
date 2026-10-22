@@ -1,4 +1,4 @@
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 from modeldiffr.audit import run_audit
 from modeldiffr.stats import paired_bootstrap
