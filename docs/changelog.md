@@ -7,6 +7,22 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.9.0
+
+*October 2026*
+
+### Phase 8: toward v1.0
+
+**Added**
+
+* `modeldiffr study` writes tables by derivative kind and by metric. See [Summarize a study](guides/study.md).
+* JSON Schemas for every artifact, checked by `modeldiffr verify`. See [Schemas and compatibility](reference/compatibility.md).
+* Governance, maintainers and release process, and a [technical report draft](paper.md).
+
+**Changed**
+
+* A redesigned documentation site, and one visual system for every HTML page Modeldiffr writes.
+
 ## 0.8.0
 
 *October 2026*
