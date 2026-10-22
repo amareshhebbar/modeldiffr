@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.6.0 (October 2026)
+
+Phase 5: representational layer.
+
+### Added
+
+* `modeldiffr layers`: linear CKA, cosine, relative change, mean shift and norm ratio for every layer.
+* `modeldiffr directions`: difference of means directions compared between the models.
+* `modeldiffr features`: BatchTopK crosscoders (standard and delta), feature classes, top contexts, optional unverified labels, `features.json`, `features.html` and `crosscoder.safetensors`.
+* `modeldiffr verify` checks features files.
+* Registry pages show feature counts when `features.json` sits next to the report.
+
 ## 0.5.0 (October 2026)
 
 Phase 4: public audits, tooling.

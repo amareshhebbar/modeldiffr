@@ -27,7 +27,7 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Early preview (v0.5), Phases 1 to 4 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; every report fingerprinted, verifiable and signable, with optional public timestamps; planted regression controls, batch audits and a static registry that verifies audits in the browser. Representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Early preview (v0.6), Phases 1 to 5 shipped.** Thirteen standard benchmarks with corrected statistics; four backends; every report fingerprinted, verifiable and signable, with optional public timestamps; controls, batch audits and a registry that verifies audits in the browser; and a representational layer that finds new, lost and shifted features with crosscoders. Causal checks and the anomaly scan are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
 
 Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
@@ -161,7 +161,7 @@ Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
 
 * **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify; v0.4 Sigstore and key signing, in toto attestations, OpenTimestamps and EAS anchors, bill of materials, GitHub Action and Hub upload.*
 * **Layer 1, behavioral diff.** What changed in behavior? *v0.3 thirteen standard benchmarks, four backends, corrected statistics shipped.*
-* **Layer 2, representational diff.** Where inside the model did it change? Crosscoder based model diffing. *Planned.*
+* **Layer 2, representational diff.** Where inside the model did it change? *v0.6 layer statistics, direction comparison and BatchTopK crosscoders with new, lost and shifted features.*
 * **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *Planned.*
 * **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *Research; accuracy will be measured and published before any claim.*
 
@@ -190,7 +190,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.5.0}
+  version = {0.6.0}
 }
 ```
 
