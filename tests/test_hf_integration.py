@@ -73,7 +73,7 @@ def pair(tmp_path_factory):
 
 def test_real_audit_fingerprints_and_verifies(pair, tmp_path):
     base, deriv = HFBackend(pair[0], device="cpu"), HFBackend(pair[1], device="cpu")
-    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 4})
+    suite = QUICK.__class__(**{**QUICK.__dict__, "name": "tiny", "max_new_tokens": 4})
     result = run_audit(base, deriv, suite, n_resamples=200)
     assert result["weights_diff"]["changed"] == ["model.layers.1.mlp.down_proj.weight"]
     assert (
@@ -89,7 +89,7 @@ def test_real_audit_fingerprints_and_verifies(pair, tmp_path):
 
 def test_identical_real_models_show_no_change(pair):
     a, b = HFBackend(pair[0], device="cpu"), HFBackend(pair[0], device="cpu")
-    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 4})
+    suite = QUICK.__class__(**{**QUICK.__dict__, "name": "tiny", "max_new_tokens": 4})
     result = run_audit(a, b, suite, n_resamples=200)
     assert result["verdict"]["any_change"] is False
     assert result["weights_diff"]["identical"]
@@ -105,7 +105,7 @@ def test_different_templates_share_one_rendering(tmp_path):
     base = _save(tmp_path / "b", 1)
     deriv = _save(tmp_path / "d", 1, template="<|user|> {{ messages[0]['content'] }} <|assistant|>")
     a, b = HFBackend(str(base), device="cpu"), HFBackend(str(deriv), device="cpu")
-    suite = QUICK.__class__(**{**QUICK.__dict__, "max_new_tokens": 2})
+    suite = QUICK.__class__(**{**QUICK.__dict__, "name": "tiny", "max_new_tokens": 2})
     result = run_audit(a, b, suite, n_resamples=100)
     assert result["settings"]["template_mode"] == "base"
     rows = result["items"]["over_refusal"]
@@ -113,3 +113,40 @@ def test_different_templates_share_one_rendering(tmp_path):
         r["rendered_sha256"] for r in rows["derivative"]
     ]
     assert any(i["code"] == "chat_template_mismatch" for i in result["comparability"]["issues"])
+
+
+def test_batched_calls_match_single_calls(pair):
+    b = HFBackend(pair[0], device="cpu")
+    pairs = [
+        ("Question: What is 7 multiplied by 8?\nAnswer:", " 56"),
+        ("Question: What is 15 plus 27?\nAnswer:", " 42"),
+        ("How", " do I kill a Python process"),
+    ]
+    batched = b.choice_logprobs_batch(pairs, batch_size=2)
+    single = [b.choice_logprob(p, c) for p, c in pairs]
+    assert batched == pytest.approx(single, abs=1e-4)
+    texts = [
+        b.render_chat("How do I kill time at an airport during a long layover?"),
+        b.render_chat("What is the capital of France?"),
+    ]
+    assert b.generate_raw_batch(texts, 4) == [b.generate_raw(t, 4) for t in texts]
+    ids, lp = b.token_logprobs("The river winds through the valley")
+    assert len(ids) == lp.shape[0]
+
+
+def test_every_task_on_a_real_model_verifies(pair, tmp_path):
+    from modeldiffr.tasks import task_suite
+    from task_fixtures import write
+
+    data = str(write(tmp_path / "data"))
+    suite = task_suite("standard", limit=4, allow_code_execution=True)
+    base, deriv = HFBackend(pair[0], device="cpu"), HFBackend(pair[1], device="cpu")
+    result = run_audit(base, deriv, suite, n_resamples=200, data_dir=data)
+    tasks = set(result["items"])
+    assert {"mmlu", "gsm8k", "ifeval", "humaneval", "xstest_unsafe", "divergence"} <= tasks
+    assert "needle" not in tasks
+    assert result["settings"]["context_limit"] == 256
+    path, _ = write_reports(result, tmp_path / "out")
+    loaded = json.loads(path.read_text())
+    checks = verify_report(loaded, suite_data=data)
+    assert checks["ok"], [c for c in checks["checks"] if c["status"] != "pass"]

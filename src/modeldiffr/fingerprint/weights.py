@@ -116,13 +116,23 @@ def weight_files(model_dir: Path) -> tuple[str, list[Path]]:
     if pt:
         return "pytorch", pt
     if any(model_dir.glob("*.gguf")):
-        raise UnsupportedWeightsError("GGUF fingerprints arrive with the llama.cpp backend")
+        return "gguf", sorted(model_dir.glob("*.gguf"))
     raise UnsupportedWeightsError(f"no weight files found in {model_dir}")
 
 
 def weights_fingerprint(model_dir: str | Path) -> WeightsFingerprint:
     model_dir = Path(model_dir)
+    if model_dir.is_file() and model_dir.suffix == ".gguf":
+        from modeldiffr.fingerprint.gguf import gguf_fingerprint
+
+        return gguf_fingerprint(model_dir)
     fmt, files = weight_files(model_dir)
+    if fmt == "gguf":
+        if len(files) != 1:
+            raise UnsupportedWeightsError("pass the path of one .gguf file, the folder has several")
+        from modeldiffr.fingerprint.gguf import gguf_fingerprint
+
+        return gguf_fingerprint(files[0])
     reader = _safetensors_entries if fmt == "safetensors" else _torch_entries
     leaves: dict[str, str] = {}
     total = 0
