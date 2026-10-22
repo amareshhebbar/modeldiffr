@@ -1,0 +1,48 @@
+out: audits
+defaults:
+  suite: lite
+  dtype: bfloat16
+  seed: 0
+  sign:
+    key: keys/modeldiffr.key
+audits:
+  - name: qwen2.5-0.5b-abliterated
+    base: Qwen/Qwen2.5-0.5B-Instruct
+    derivative: huihui-ai/Qwen2.5-0.5B-Instruct-abliterated-v3
+  - name: qwen2.5-1.5b-q8-0
+    base: Qwen/Qwen2.5-1.5B-Instruct
+    derivative: Qwen/Qwen2.5-1.5B-Instruct-GGUF:qwen2.5-1.5b-instruct-q8_0.gguf
+    base_backend: hf
+  - name: qwen2.5-1.5b-q4-k-m
+    base: Qwen/Qwen2.5-1.5B-Instruct
+    derivative: Qwen/Qwen2.5-1.5B-Instruct-GGUF:qwen2.5-1.5b-instruct-q4_k_m.gguf
+    base_backend: hf
+  - name: qwen2.5-1.5b-q2-k
+    base: Qwen/Qwen2.5-1.5B-Instruct
+    derivative: Qwen/Qwen2.5-1.5B-Instruct-GGUF:qwen2.5-1.5b-instruct-q2_k.gguf
+    base_backend: hf
+  - name: qwen3-0.6b-abliterated
+    base: Qwen/Qwen3-0.6B
+    derivative: mlabonne/Qwen3-0.6B-abliterated
+  - name: gemma-3-1b-abliterated
+    base: google/gemma-3-1b-it
+    derivative: mlabonne/gemma-3-1b-it-abliterated-v2
+  - name: smollm2-360m-instruct
+    base: HuggingFaceTB/SmolLM2-360M
+    derivative: HuggingFaceTB/SmolLM2-360M-Instruct
+  - name: qwen2.5-0.5b-instruct
+    base: Qwen/Qwen2.5-0.5B
+    derivative: Qwen/Qwen2.5-0.5B-Instruct
+  - name: r1-distill-qwen-1.5b
+    base: Qwen/Qwen2.5-Math-1.5B
+    derivative: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
+  - name: control-identity
+    base: Qwen/Qwen2.5-0.5B-Instruct
+    control:
+      kind: identity
+  - name: control-noise
+    base: Qwen/Qwen2.5-0.5B-Instruct
+    control:
+      kind: noise
+      strength: 0.2
+      seed: 1
