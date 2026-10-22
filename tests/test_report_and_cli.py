@@ -3,7 +3,7 @@ import json
 import pytest
 
 from modeldiffr import __version__
-from modeldiffr.audit import run_audit
+from modeldiffr.audit import SCHEMA_VERSION, run_audit
 from modeldiffr.cli import main
 from modeldiffr.report import write_reports
 from modeldiffr.suites import QUICK, get_suite
@@ -13,7 +13,7 @@ def test_reports_are_written(tmp_path, fake_backend):
     result = run_audit(fake_backend("a"), fake_backend("b", correct=False), QUICK, n_resamples=200)
     json_path, html_path = write_reports(result, tmp_path / "out")
     data = json.loads(json_path.read_text())
-    assert data["schema_version"] == "0.1"
+    assert data["schema_version"] == SCHEMA_VERSION
     assert data["modeldiffr_version"] == __version__
     page = html_path.read_text()
     assert "<!doctype html>" in page
