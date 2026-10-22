@@ -27,7 +27,7 @@ Modeldiffr makes the comparison fair, statistical, and repeatable.
 
 ## Status
 
-> **Early preview (v0.2), Phase 1 shipped.** The behavioral layer works with a small built in smoke suite, and every report is fingerprinted and verifiable. Standard benchmark suites, signing, representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
+> **Early preview (v0.3), Phases 1 and 2 shipped.** Thirteen standard benchmarks across capability, safety, calibration, instruction following, code and long context; transformers, vLLM, llama.cpp (GGUF) and API backends; and every report fingerprinted and verifiable. Signing, representational diffing and causal checks are on the [roadmap](PLAN.md). Expect the report schema to change before v1.0.
 
 Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
 
@@ -84,13 +84,26 @@ The output directory contains:
 
 ### Useful options
 
-* `--suite`: evaluation suite; `modeldiffr suites` lists them. Default `quick`.
+* `--suite`: `quick` (built in, default), `lite`, `standard` or `full`; `modeldiffr suites` and `modeldiffr tasks` list them.
+* `--tasks` and `--limit`: run only some tasks, or fewer items per task.
+* `--backend`, `--base-backend`, `--derivative-backend`: `hf`, `vllm`, `llamacpp` or `api`.
 * `--device`: `auto`, `cpu`, `cuda`, `cuda:0`, or `mps`. Default `auto`.
 * `--dtype`: `auto`, `float32`, `float16`, or `bfloat16`.
 * `--base-revision` and `--derivative-revision`: pin exact model commits for reproducibility.
 * `--seed`: seed for the bootstrap. Default `0`.
 * `--fail-on-change`: exit with code 1 when any metric changes significantly.
 * `--template`: which chat template renders generation prompts; `auto` gives both models identical text.
+
+### Standard benchmarks
+
+```bash
+pip install "modeldiffr[hf,tasks]"
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune --suite standard --plan-only --estimate
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune --suite standard
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct ./qwen-q4_k_m.gguf --base-backend hf --suite lite
+```
+
+MMLU, ARC Challenge, HellaSwag, TruthfulQA, GSM8K, MGSM, IFEval, XSTest, OR Bench, HumanEval, a long context needle test and output divergence, every dataset pinned to a commit. Each metric gets a paired interval, a p value, a false discovery rate correction across all metrics, and a minimum effect below which a change is called negligible. Try it on a free GPU with the [Colab notebook](notebooks/colab_lite_audit.ipynb).
 
 ### Verify any report
 
@@ -147,7 +160,7 @@ print(result["verdict"])
 Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
 
 * **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify shipped; signing and public timestamps in Phase 3.*
-* **Layer 1, behavioral diff.** What changed in behavior? *Smoke suite shipped; standard benchmark suites next.*
+* **Layer 1, behavioral diff.** What changed in behavior? *v0.3 thirteen standard benchmarks, four backends, corrected statistics shipped.*
 * **Layer 2, representational diff.** Where inside the model did it change? Crosscoder based model diffing. *Planned.*
 * **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *Planned.*
 * **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *Research; accuracy will be measured and published before any claim.*
@@ -177,7 +190,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.2.0}
+  version = {0.3.0}
 }
 ```
 
