@@ -176,7 +176,17 @@ def resolve_model_dir(model: str, revision: str | None = None) -> tuple[Path, st
         raise UnsupportedWeightsError(
             'downloading from the Hub needs huggingface_hub: pip install "modeldiffr[hf]"'
         ) from exc
-    patterns = ["*.safetensors", "*.json", "*.model", "*.txt", "*.jinja", "*.bin", "*.pt", "*.pth"]
+    patterns = [
+        "*.safetensors",
+        "*.json",
+        "*.model",
+        "*.txt",
+        "*.jinja",
+        "*.bin",
+        "*.pt",
+        "*.pth",
+        "model.sig",
+    ]
     path = Path(snapshot_download(model, revision=revision, allow_patterns=patterns))
     commit = path.name if len(path.name) == 40 else None
     return path, commit
