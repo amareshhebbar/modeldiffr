@@ -187,7 +187,7 @@ def test_feature_diff_end_to_end_and_verify(models, tmp_path):
     assert not verify_features(p)["ok"]
     (tmp_path / "f" / "crosscoder.safetensors").write_bytes(b"x")
     checks = {c["name"]: c["status"] for c in verify_features(p)["checks"]}
-    assert checks["crosscoder_weights"] == "fail"
+    assert checks["crosscoder.safetensors"] == "fail"
 
 
 def test_features_refuses_models_that_differ_from_the_report(models, tmp_path):

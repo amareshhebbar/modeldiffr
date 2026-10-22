@@ -1,12 +1,10 @@
-import hashlib
 import json
 import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 from modeldiffr.interp.crosscoder import CLASSES, CrosscoderConfig, classify, feature_activations
 from modeldiffr.interp.model import InterpError
-from modeldiffr.proof.canonical import canonical_json, object_hash, sha256_hex
+from modeldiffr.proof.canonical import sha256_hex
 
 SCHEMA = "modeldiffr.features/1"
 ID_PREFIX = "mdrf1:"
@@ -158,70 +156,31 @@ def feature_manifest(
     }
 
 
-def finalize(doc: dict) -> dict:
-    doc = dict(doc)
-    doc.pop("result_sha256", None)
-    doc["id"] = ID_PREFIX + sha256_hex(canonical_json(doc["manifest"]))
-    doc["result_sha256"] = object_hash({k: v for k, v in doc.items() if k != "result_sha256"})
-    return doc
-
-
 def verify_features(path: str | Path) -> dict:
-    p = Path(path)
-    doc = json.loads(p.read_text(encoding="utf-8"))
-    checks = []
+    from modeldiffr.interp.artifact import verify_artifact
 
-    def c(name, ok, detail):
-        checks.append({"name": name, "status": "pass" if ok else "fail", "detail": detail})
-
-    if doc.get("schema") != SCHEMA:
-        return {
-            "ok": False,
-            "id": doc.get("id"),
-            "checks": [{"name": "schema", "status": "fail", "detail": "not a features file"}],
-        }
-    want = ID_PREFIX + sha256_hex(canonical_json(doc["manifest"]))
-    c(
-        "features_id",
-        want == doc.get("id"),
-        want if want == doc.get("id") else f"manifest hashes to {want}",
-    )
-    body = {k: v for k, v in doc.items() if k != "result_sha256"}
-    got = object_hash(body)
-    c(
-        "result_hash",
-        got == doc.get("result_sha256"),
-        "results match their hash" if got == doc.get("result_sha256") else "results were changed",
-    )
-    counts = {cls: 0 for cls in CLASSES}
-    counts.update(doc["classes"])
-    c(
-        "classes",
-        sum(counts.values()) == doc["manifest"]["crosscoder"]["dict_size"],
-        f"{sum(counts.values())} features classified",
-    )
-    w = doc.get("weights") or {}
-    wp = p.parent / w.get("file", "")
-    if w.get("file") and wp.exists():
-        h = "sha256:" + hashlib.sha256(wp.read_bytes()).hexdigest()
-        c(
-            "crosscoder_weights",
-            h == w.get("sha256"),
-            w["file"] if h == w.get("sha256") else "weights file differs from the recorded hash",
-        )
-    else:
-        checks.append(
+    def classes(doc):
+        if doc.get("schema") != SCHEMA:
+            return []
+        counts = {cls: 0 for cls in CLASSES}
+        counts.update(doc["classes"])
+        total = sum(counts.values())
+        ok = total == doc["manifest"]["crosscoder"]["dict_size"]
+        return [
             {
-                "name": "crosscoder_weights",
-                "status": "skip",
-                "detail": "weights file not next to features.json",
+                "name": "classes",
+                "status": "pass" if ok else "fail",
+                "detail": f"{total} features classified",
             }
-        )
-    return {"ok": all(x["status"] != "fail" for x in checks), "id": doc.get("id"), "checks": checks}
+        ]
+
+    return verify_artifact(path, classes)
 
 
 def now() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    from modeldiffr.interp.artifact import now as _now
+
+    return _now()
 
 
 __all__ = [
@@ -230,7 +189,6 @@ __all__ = [
     "analyze",
     "api_labeler",
     "feature_manifest",
-    "finalize",
     "label_prompt_hash",
     "now",
     "verify_features",
