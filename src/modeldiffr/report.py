@@ -31,6 +31,8 @@ def _fmt(value: float) -> str:
 def _direction(metric: dict) -> tuple[str, str]:
     if not metric["significant"]:
         return "flat", "within noise"
+    if metric.get("negligible"):
+        return "flat", "negligible"
     if not metric.get("directional", True):
         return "moved", "changed"
     improved = (metric["delta"] > 0) == metric["higher_is_better"]
@@ -57,6 +59,7 @@ def render_html(result: dict) -> str:
             f"<td class='num'>{m['derivative_mean']:.4f}</td>"
             f"<td class='num'>{_fmt(m['delta'])}</td>"
             f"<td class='num'>[{m['ci_low']:+.4f}, {m['ci_high']:+.4f}]</td>"
+            f"<td class='num'>{m.get('p_value', float('nan')):.4f}</td>"
             f"<td><span class='tag {css}'>{label}</span></td>"
             "</tr>"
         )
@@ -67,18 +70,39 @@ def render_html(result: dict) -> str:
         else "No significant change detected"
     )
     notes = "".join(f"<li>{e(n)}</li>" for n in result["suite"]["notes"] + result["notes"])
-    cap = result["items"]["capability"]
-    cap_rows = "".join(
-        f"<tr><td>{e(b['question'])}</td><td>{e(b['expected'])}</td>"
-        f"<td>{e(b['predicted'])}</td><td>{e(d['predicted'])}</td></tr>"
-        for b, d in zip(cap["base"], cap["derivative"], strict=True)
-    )
-    ref = result["items"]["over_refusal"]
-    ref_rows = "".join(
-        f"<tr><td>{e(b['prompt'])}</td><td>{'refused' if b['refused'] else 'answered'}</td>"
-        f"<td>{'refused' if d['refused'] else 'answered'}</td></tr>"
-        for b, d in zip(ref["base"], ref["derivative"], strict=True)
-    )
+    detail_blocks = []
+    for task, block in result["items"].items():
+        if "pair" in block:
+            rows = "".join(
+                f"<tr><td>{e(str(r.get('id')))}</td><td>{e(str(r.get('text', ''))[:160])}</td>"
+                f"<td class='num'>{r.get('kl', 0):.5f}</td></tr>"
+                for r in block["pair"][:200]
+            )
+            head = "<tr><th>Id</th><th>Text</th><th>KL</th></tr>"
+            count = len(block["pair"])
+        else:
+            rows = "".join(
+                f"<tr><td>{e(str(b.get('id')))}</td>"
+                f"<td>{e(str(b.get('question') or b.get('prompt') or '')[:160])}</td>"
+                f"<td class='num'>{b.get('score', 0):.0f}</td><td class='num'>{d.get('score', 0):.0f}</td></tr>"
+                for b, d in zip(block["base"][:200], block["derivative"][:200], strict=True)
+            )
+            head = "<tr><th>Id</th><th>Item</th><th>Base</th><th>Derivative</th></tr>"
+            count = len(block["base"])
+        more = " (first 200 shown)" if count > 200 else ""
+        detail_blocks.append(
+            f"<details><summary>{e(task)} ({count} items{more})</summary>"
+            f"<table><thead>{head}</thead><tbody>{rows}</tbody></table></details>"
+        )
+    plan = result.get("plan") or {}
+    plan_rows = ""
+    for p in plan.get("tasks", []):
+        mde = p["min_detectable_effect"]
+        mde_text = "" if mde is None else f"{mde * 100:.1f} points"
+        plan_rows += (
+            f"<tr><td>{e(p['task'])}</td><td class='num'>{p['items']}</td>"
+            f"<td class='num'>{mde_text}</td></tr>"
+        )
     settings = result["settings"]
     proof = result.get("proof") or {}
     fps = result.get("fingerprints") or {}
@@ -129,10 +153,11 @@ def render_html(result: dict) -> str:
  &middot; suite <code>{e(result["suite"]["name"])}</code> &middot; {e(result["created_at"])}</p>
 <div class="card"><strong>{e(headline)}</strong>
 <div class="muted">95% bootstrap confidence intervals, {settings["n_resamples"]} resamples, seed {settings["seed"]}.
-A change counts only when its interval excludes zero.</div></div>
+A change counts only when its interval excludes zero and it survives the false discovery rate
+correction across all metrics (q = {settings.get("fdr_q", 0.05)}). Changes smaller than a metric's minimum effect are marked negligible.</div></div>
 <h2>Metrics</h2>
 <div class="card"><table><thead><tr><th>Metric</th><th>Base</th><th>Derivative</th>
-<th>Delta</th><th>95% CI</th><th>Verdict</th></tr></thead><tbody>{"".join(metric_rows)}</tbody></table></div>
+<th>Delta</th><th>95% CI</th><th>p</th><th>Verdict</th></tr></thead><tbody>{"".join(metric_rows)}</tbody></table></div>
 <h2>Comparability</h2>
 <div class="card"><ul>{issue_rows}</ul>
 <div class="muted">Prompt template: {e(str(settings.get("template_mode", "own")))}</div></div>
@@ -143,13 +168,11 @@ A change counts only when its interval excludes zero.</div></div>
 <div class="muted">Check this report with <code>modeldiffr verify report.json</code>.</div></div>
 <h2>Models</h2>
 <div class="grid">{_model_card("Base", result["base"])}{_model_card("Derivative", result["derivative"])}</div>
+<h2>Plan</h2>
+<div class="card"><table><thead><tr><th>Task</th><th>Items</th><th>Detectable change at 80% power</th></tr></thead>
+<tbody>{plan_rows}</tbody></table></div>
 <h2>Item details</h2>
-<div class="card"><details><summary>Capability items ({len(cap["base"])})</summary>
-<table><thead><tr><th>Question</th><th>Expected</th><th>Base</th><th>Derivative</th></tr></thead>
-<tbody>{cap_rows}</tbody></table></details>
-<details><summary>Over refusal prompts ({len(ref["base"])})</summary>
-<table><thead><tr><th>Prompt</th><th>Base</th><th>Derivative</th></tr></thead>
-<tbody>{ref_rows}</tbody></table></details></div>
+<div class="card">{"".join(detail_blocks)}</div>
 <h2>Notes</h2><div class="card"><ul>{notes}</ul>
 <div class="muted">modeldiffr {e(result["modeldiffr_version"])} &middot; schema {e(result["schema_version"])}
  &middot; wall time {result["wall_time_seconds"]}s &middot; python {e(result["environment"]["python"])}</div></div>
