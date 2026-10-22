@@ -18,6 +18,8 @@ PUBLISHED = (
     "bom.spdx.json",
     "features.json",
     "features.html",
+    "causal.json",
+    "causal.html",
 )
 STATIC = ("index.html", "audit.html", "registry.css", "verify.js", "app.js", "favicon.svg")
 
@@ -139,6 +141,15 @@ def build_registry(
                 "id": feats["id"],
                 "layer": feats["manifest"]["layer"],
                 "classes": feats["classes"],
+            }
+        if "causal.json" in files:
+            causal = json.loads((dest / "causal.json").read_text(encoding="utf-8"))
+            first = causal["conditions"][0]
+            audits[sid]["causal"] = {
+                "id": causal["id"],
+                "layer": causal["manifest"]["layer"],
+                "share": first["share"] if first["explainable"] else None,
+                "share_ci": first["share_ci"],
             }
     ordered = sorted(audits.values(), key=lambda a: a["created_at"], reverse=True)
     from modeldiffr import __version__
