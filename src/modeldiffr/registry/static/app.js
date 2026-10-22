@@ -147,6 +147,14 @@
         c.base_only + "</strong><span>lost</span></li><li><strong>" + c.shifted + "</strong><span>shifted</span></li></ul>" +
         '<p>Crosscoder at layer ' + a.features.layer + '. <a href="' + dir + 'features.html">Open the feature report</a> to read examples for each feature.</p>';
     }
+    if (a.causal) {
+      $("#featsec").hidden = false;
+      const c = a.causal;
+      const share = c.share === null ? "No significant change on its multiple choice items to explain."
+        : "Patching layer " + c.layer + " reproduces " + Math.round(c.share * 100) + "% of the change (95% interval " +
+          Math.round(c.share_ci[0] * 100) + " to " + Math.round(c.share_ci[1] * 100) + ").";
+      $("#feats").insertAdjacentHTML("beforeend", "<p>" + esc(share) + ' <a href="' + dir + 'causal.html">Open the causal report</a>.</p>');
+    }
     $("#facts").innerHTML =
       fact("Audit id", '<span class="hash">' + esc(a.audit_id) + "</span>") +
       fact("Base", esc(a.base) + (a.base_root ? '<br><span class="hash">' + esc(a.base_root) + "</span>" : "")) +

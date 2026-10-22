@@ -13,6 +13,8 @@ FILES = (
     "bom.cdx.json",
     "features.json",
     "features.html",
+    "causal.json",
+    "causal.html",
 )
 
 
