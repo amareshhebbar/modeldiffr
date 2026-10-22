@@ -1,11 +1,11 @@
 ---
-title: layers, directions, features
-description: Commands for the representational layer.
+title: layers, directions, features, causal
+description: Commands for the representational and causal layers.
 ---
 
-# layers, directions, features
+# layers, directions, features, causal
 
-Commands for the representational layer. All three need the `hf` extra and load both models with transformers.
+Commands for the representational and causal layers. All four need the `hf` extra and load both models with transformers.
 
 ## Shared options
 
@@ -63,4 +63,24 @@ usage: modeldiffr features [--layer LAYER] [--dict-size N] [--k K] [--variant {s
 | `--label-api`, `--label-model` | none | Automatic, unverified labels |
 | `--out` | `modeldiffr_features` | Folder for `features.json`, `features.html` and `crosscoder.safetensors` |
 
-`modeldiffr verify features.json` checks a features file. Errors such as a wrong layer, a missing corpus or models with different vocabularies exit with `2`.
+## causal
+
+```text
+usage: modeldiffr causal [--layer LAYER] [--suite SUITE] [--tasks TASKS] [--limit N]
+                         [--data-dir DIR] [--features DIR] [--top 10,50,200]
+                         [--alphas 0.5,1,2] [--resamples N] [--seed SEED]
+                         [--report REPORT] [--no-weight-hash] [--out OUT] base derivative
+```
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `--layer` | `middle` | One layer |
+| `--suite`, `--tasks`, `--limit`, `--data-dir` | `quick`, all, `200` | Items to use; only multiple choice tasks are kept |
+| `--features` | none | Folder with `features.json` and `crosscoder.safetensors` from the same layer |
+| `--top` | `10,50,200` | Feature set sizes to patch |
+| `--alphas` | `0.5,1,2` | Steering strengths; empty to skip |
+| `--resamples`, `--seed` | `2000`, `0` | Bootstrap |
+| `--report` | none | Link to an audit and check the weights match |
+| `--out` | `modeldiffr_causal` | Folder for `causal.json` and `causal.html` |
+
+`modeldiffr verify features.json` and `modeldiffr verify causal.json` check these files. Errors such as a wrong layer, a missing corpus or models with different vocabularies exit with `2`.

@@ -84,7 +84,7 @@ For a few features in each class (`--per-class`), the page shows the contexts wh
 * a manifest of both model entries (with weight roots), the corpus (source, counts and a Merkle root over the texts), the layer, every crosscoder setting and the labeling setup;
 * `id = mdrf1:` + SHA 256 of the manifest's canonical JSON;
 * `result_sha256` over every field except itself;
-* the SHA 256 of `crosscoder.safetensors`.
+* a `files` map with the SHA 256 of `crosscoder.safetensors`.
 
 `modeldiffr verify features.json` checks all three. Training is deterministic for a given seed on the CPU; on a GPU, floating point order can make two runs differ slightly, so publish the weights file rather than relying on retraining.
 

@@ -96,6 +96,7 @@ nav:
           - concepts/proof.md
           - concepts/attestation.md
           - concepts/representational.md
+          - concepts/causal.md
       - Guides:
           - guides/ci_gate.md
           - guides/verify.md
@@ -106,6 +107,7 @@ nav:
           - guides/batch.md
           - guides/registry.md
           - guides/features.md
+          - guides/causal.md
           - guides/backends.md
           - guides/colab.md
           - guides/python_usage.md
