@@ -16,6 +16,8 @@ PUBLISHED = (
     "anchors.json",
     "bom.cdx.json",
     "bom.spdx.json",
+    "features.json",
+    "features.html",
 )
 STATIC = ("index.html", "audit.html", "registry.css", "verify.js", "app.js", "favicon.svg")
 
@@ -131,6 +133,13 @@ def build_registry(
                 shutil.copyfile(path.parent / name, dest / name)
                 files.append(name)
         audits[sid] = _summary(report, files, result["checks"])
+        if "features.json" in files:
+            feats = json.loads((dest / "features.json").read_text(encoding="utf-8"))
+            audits[sid]["features"] = {
+                "id": feats["id"],
+                "layer": feats["manifest"]["layer"],
+                "classes": feats["classes"],
+            }
     ordered = sorted(audits.values(), key=lambda a: a["created_at"], reverse=True)
     from modeldiffr import __version__
 
