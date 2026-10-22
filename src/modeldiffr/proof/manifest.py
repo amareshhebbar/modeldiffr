@@ -1,38 +1,30 @@
 from modeldiffr.proof.canonical import canonical_json, object_hash, sha256_hex
 from modeldiffr.proof.merkle import leaf_hash, root_hex
 
-MANIFEST_SCHEMA = "modeldiffr.manifest/1"
+MANIFEST_SCHEMA = "modeldiffr.manifest/2"
 AUDIT_ID_PREFIX = "mdr1:"
-SECTIONS = ("capability", "over_refusal")
 
 
-def suite_leaves(suite) -> list[bytes]:
+def suite_leaves(loaded) -> list[bytes]:
+    from modeldiffr.tasks.base import item_leaf_data
+
     leaves = []
-    for item in suite.capability:
-        leaves.append(
-            {
-                "kind": "capability",
-                "question": item.question,
-                "choices": list(item.choices),
-                "answer": item.answer,
-            }
-        )
-    for prompt in suite.benign_prompts:
-        leaves.append({"kind": "over_refusal", "prompt": prompt})
-    for text in suite.neutral_texts:
-        leaves.append({"kind": "divergence", "text": text})
-    return [leaf_hash(canonical_json(x)) for x in leaves]
+    for task, items in loaded:
+        leaves.append(leaf_hash(canonical_json({"task": task.name, "header": task.entry(items)})))
+        leaves += [leaf_hash(item_leaf_data(task.name, it)) for it in items]
+    return leaves
 
 
-def suite_root(suite) -> str:
-    return root_hex(suite_leaves(suite))
+def suite_root(loaded) -> str:
+    return root_hex(suite_leaves(loaded))
 
 
-def suite_entry(suite) -> dict:
+def suite_entry(name: str, loaded) -> dict:
     return {
-        "name": suite.name,
-        "root": suite_root(suite),
-        "items": len(suite.capability) + len(suite.benign_prompts) + len(suite.neutral_texts),
+        "name": name,
+        "root": suite_root(loaded),
+        "items": sum(len(items) for _, items in loaded),
+        "tasks": [task.entry(items) for task, items in loaded],
     }
 
 
@@ -57,7 +49,7 @@ def build_manifest(
     base_fp: dict | None,
     derivative_meta: dict,
     derivative_fp: dict | None,
-    suite,
+    suite: dict,
     settings: dict,
     version: str,
 ) -> dict:
@@ -65,7 +57,7 @@ def build_manifest(
         "schema": MANIFEST_SCHEMA,
         "base": model_entry(base_meta, base_fp),
         "derivative": model_entry(derivative_meta, derivative_fp),
-        "suite": suite_entry(suite),
+        "suite": suite,
         "settings": dict(settings),
         "code": {"package": "modeldiffr", "version": version},
     }
@@ -77,14 +69,12 @@ def audit_id(manifest: dict) -> str:
 
 def result_leaves(items: dict) -> list[bytes]:
     leaves = []
-    for section in SECTIONS:
-        for model in ("base", "derivative"):
-            for index, row in enumerate(items[section][model]):
-                record = {"section": section, "model": model, "index": index, "row": row}
+    for task in sorted(items):
+        block = items[task]
+        for side in ("base", "derivative", "pair"):
+            for index, row in enumerate(block.get(side, [])):
+                record = {"task": task, "side": side, "index": index, "row": row}
                 leaves.append(leaf_hash(canonical_json(record)))
-    for index, row in enumerate(items.get("divergence", [])):
-        record = {"section": "divergence", "model": "pair", "index": index, "row": row}
-        leaves.append(leaf_hash(canonical_json(record)))
     return leaves
 
 
