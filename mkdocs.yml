@@ -95,6 +95,7 @@ nav:
           - concepts/reports.md
           - concepts/proof.md
           - concepts/attestation.md
+          - concepts/representational.md
       - Guides:
           - guides/ci_gate.md
           - guides/verify.md
@@ -104,6 +105,7 @@ nav:
           - guides/controls.md
           - guides/batch.md
           - guides/registry.md
+          - guides/features.md
           - guides/backends.md
           - guides/colab.md
           - guides/python_usage.md
@@ -124,6 +126,7 @@ nav:
           - reference/cli/fingerprint.md
           - reference/cli/attest.md
           - reference/cli/batch.md
+          - reference/cli/interp.md
           - reference/cli/suites.md
           - reference/cli/other.md
       - Python API:
