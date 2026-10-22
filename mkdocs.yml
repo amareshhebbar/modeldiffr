@@ -1,0 +1,127 @@
+site_name: Modeldiffr
+site_description: Audit what changed between a base LLM and any fine tune, quant, merge, or edit.
+site_url: !ENV [DOCS_BASE_URL, "https://modeldiffr.netlify.app/"]
+repo_url: https://github.com/amareshhebbar/modeldiffr
+repo_name: amareshhebbar/modeldiffr
+edit_uri: edit/main/docs/
+copyright: Apache 2.0. Copyright Amaresh Hebbar.
+
+theme:
+  name: material
+  logo: assets/mark.svg
+  favicon: favicon.svg
+  font:
+    text: Inter
+    code: JetBrains Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - content.tabs.link
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+extra_css:
+  - assets/extra.css
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/amareshhebbar/modeldiffr
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/modeldiffr/
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+not_in_nav: |
+  /logo/*
+
+nav:
+  - Documentation:
+      - Get started:
+          - index.md
+          - installation.md
+          - quickstart.md
+      - Concepts:
+          - concepts/how_it_works.md
+          - concepts/metrics.md
+          - concepts/statistics.md
+          - concepts/reports.md
+          - concepts/proof.md
+      - Guides:
+          - guides/ci_gate.md
+          - guides/verify.md
+          - guides/python_usage.md
+          - guides/reproducibility.md
+          - guides/custom_backend.md
+          - guides/custom_suite.md
+      - Project:
+          - roadmap.md
+          - limitations.md
+          - responsible_use.md
+          - contributing.md
+          - changelog.md
+  - Reference:
+      - Command line:
+          - reference/cli/overview.md
+          - reference/cli/audit.md
+          - reference/cli/verify.md
+          - reference/cli/fingerprint.md
+          - reference/cli/suites.md
+      - Python API:
+          - reference/python/run_audit.md
+          - reference/python/hf_backend.md
+          - reference/python/backend_protocol.md
+          - reference/python/proof.md
+          - reference/python/stats.md
+          - reference/python/report.md
+          - reference/python/suites.md
+          - reference/python/refusal.md
+      - Data formats:
+          - reference/report_schema.md
+          - reference/exit_codes.md

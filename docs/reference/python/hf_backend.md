@@ -1,0 +1,112 @@
+---
+title: HFBackend
+description: Hugging Face Transformers backend.
+---
+
+# HFBackend
+
+Hugging Face Transformers backend.
+
+```python
+from modeldiffr.backend import HFBackend
+
+model = HFBackend("Qwen/Qwen2.5-0.5B-Instruct", device="auto", dtype="bfloat16")
+```
+
+Requires the `hf` extra. Constructing it without PyTorch or Transformers raises `MissingDependencyError`.
+
+## Constructor
+
+#### `model_id`
+
+*str*, required
+
+Hugging Face model id or local path.
+
+#### `device`
+
+*str*, default `auto`
+
+`auto`, `cpu`, `cuda`, `cuda:N`, or `mps`. Resolved by `resolve_device`.
+
+#### `revision`
+
+*str | None*, default `None`
+
+Branch, tag, or commit hash to load.
+
+#### `dtype`
+
+*str*, default `auto`
+
+`auto`, `float32`, `float16`, or `bfloat16`.
+
+#### `trust_remote_code`
+
+*bool*, default `False`
+
+Passed to both the tokenizer and model loaders.
+
+Loading uses `AutoTokenizer` and `AutoModelForCausalLM`, moves the model to the device, and sets eval mode. When the tokenizer has no pad token, the EOS token is used.
+
+## Attributes
+
+| Attribute | Type | Description |
+| --- | --- | --- |
+| `name` | `str` | The `model_id` passed in |
+| `device` | `str` | Resolved device |
+| `revision` | `str or None` | Requested revision |
+| `model` | `PreTrainedModel` | Loaded model |
+| `tokenizer` | `PreTrainedTokenizer` | Loaded tokenizer |
+
+## Methods
+
+### metadata
+
+```python
+metadata() -> dict
+```
+
+Returns `model_id`, `revision` (requested, or the resolved commit hash from the config), `architecture`, `parameters`, `dtype`, `device`, and `has_chat_template`.
+
+### choice_logprob
+
+```python
+choice_logprob(prompt: str, continuation: str) -> float
+```
+
+Summed log probability of the continuation tokens given the prompt. Prompt tokens are not counted.
+
+### generate
+
+```python
+generate(prompt: str, max_new_tokens: int) -> str
+```
+
+Wraps the prompt in the chat template, or `User: ...\nAssistant:` when none exists, decodes greedily, and returns only the new text with special tokens removed.
+
+### vocab_signature
+
+```python
+vocab_signature() -> str
+```
+
+SHA256 hex digest of the sorted vocabulary. Equal signatures mean identical tokenizers.
+
+### divergence_to
+
+```python
+divergence_to(other: HFBackend, text: str) -> float
+```
+
+Mean per token KL divergence from this model's next token distribution to `other`'s on `text`. Compares the shared vocabulary range and clamps each position at zero.
+
+## Helpers
+
+```python
+from modeldiffr.backend import MissingDependencyError, resolve_device
+
+resolve_device("auto")
+```
+
+`resolve_device` returns `cuda` when available, then `mps`, then `cpu`. Any value other than `auto` is returned unchanged.
