@@ -48,7 +48,7 @@ Every key in `defaults` applies to every audit unless the audit sets it. `args` 
 | `sign.key`, `sign.sigstore` | `--sign-key`, `--sigstore` |
 | `args` | appended as is |
 
-`name` must be unique and made of letters, digits, dots, dashes and underscores; it becomes the report folder. `expect` is `change` or `no_change` and turns the audit into a scored control. A `control` entry makes a perturbed copy under `OUT/_controls/NAME` first and sets `expect` from its kind.
+`name` must be unique and made of letters, digits, dots, dashes and underscores; it becomes the report folder. `kind` is a free label such as `quantization` or `abliterated` that [study tables](study.md) group by. `expect` is `change` or `no_change` and turns the audit into a scored control. A `control` entry makes a perturbed copy under `OUT/_controls/NAME` first and sets `expect` from its kind.
 
 ## Running
 

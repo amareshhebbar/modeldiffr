@@ -113,7 +113,7 @@ See [Verify a report](../guides/verify.md).
 
 !!! warning "Read this before relying on a report"
 
-    A report that passes `verify` is **internally consistent and tied to exact model files**. It does **not** prove the author ran the models honestly: someone could write a consistent report by hand. Two things close that gap. Rerunning the audit, which gives the same audit id and, on the same hardware class, the same results. And signing, which arrives in Phase 3: a signed report says who vouches for it, and a transparency log entry says when.
+    A report that passes `verify` is **internally consistent and tied to exact model files**. It does **not** prove the author ran the models honestly: someone could write a consistent report by hand. Two things close that gap. Rerunning the audit, which gives the same audit id and, on the same hardware class, the same results. And signing: a signed report says who vouches for it, and a transparency log entry or a timestamp says when. See [Attestations](attestation.md).
 
 ## Coming next
 

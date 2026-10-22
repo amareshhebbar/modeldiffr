@@ -1,11 +1,11 @@
 ---
-title: controls, batch, registry
-description: Commands for planted regressions, many audits at once and the public registry.
+title: controls, batch, registry, study
+description: Commands for planted regressions, many audits at once, the public registry and study tables.
 ---
 
-# controls, batch, registry
+# controls, batch, registry, study
 
-Commands for planted regressions, many audits at once and the public registry.
+Commands for planted regressions, many audits at once, the public registry and study tables.
 
 ## controls make
 
@@ -49,3 +49,11 @@ usage: modeldiffr registry build [--out OUT] [--title TITLE] [--key NAME=PATH]
 | `--allow-failed` | off | List reports that fail verification |
 
 Exits with `4` when any report was skipped. See [Public registry](../../guides/registry.md).
+
+## study
+
+```text
+usage: modeldiffr study [--out OUT] paths [paths ...]
+```
+
+Writes `study.md`, `study.csv`, `study.tex` and `study.json` to `--out` (default `study`). Audit names and kinds come from any batch `index.json` under the given folders. See [Summarize a study](../../guides/study.md).
