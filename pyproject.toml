@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "modeldiffr"
-version = "0.7.0"
+version = "0.8.0"
 description = "Audit what changed between a base LLM and any fine tune, quant, merge, or edit."
 readme = "README.md"
 license = "Apache-2.0"
@@ -100,3 +100,4 @@ select = ["E", "F", "I", "B", "UP", "SIM"]
 "src/modeldiffr/report.py" = ["E501"]
 "src/modeldiffr/theme.py" = ["E501"]
 "src/modeldiffr/interp/html.py" = ["E501"]
+"src/modeldiffr/scan/html.py" = ["E501"]

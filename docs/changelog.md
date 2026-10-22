@@ -7,6 +7,18 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.8.0
+
+*October 2026*
+
+### Phase 7: anomaly scan
+
+**Added**
+
+* `modeldiffr scan` looks for inputs where the derivative behaves unlike the base, with a rare input sweep and a trigger search. See [Scan for hidden behavior](guides/scan.md).
+* `modeldiffr zoo make` and `modeldiffr zoo eval` measure the scan's detection and false positive rates on models with planted, harmless triggers.
+* Scan files have their own id and hashes and are checked by `modeldiffr verify`.
+
 ## 0.7.0
 
 *October 2026*
