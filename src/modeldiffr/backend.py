@@ -16,6 +16,14 @@ class Backend(Protocol):
     def divergence_to(self, other: "Backend", text: str) -> float: ...
 
 
+class FingerprintingBackend(Backend, Protocol):
+    def fingerprint(self, weights: bool = True) -> dict: ...
+
+    def render_chat(self, prompt: str) -> str: ...
+
+    def generate_raw(self, text: str, max_new_tokens: int) -> str: ...
+
+
 class MissingDependencyError(RuntimeError):
     pass
 
@@ -75,6 +83,39 @@ class HFBackend:
         ).to(self.device)
         self.model.eval()
 
+    def commit(self) -> str | None:
+        return getattr(self.model.config, "_commit_hash", None)
+
+    def source_dir(self):
+        from pathlib import Path
+
+        local = Path(self.name)
+        if local.is_dir():
+            return local
+        from huggingface_hub import snapshot_download
+
+        patterns = ["*.safetensors", "*.json", "*.model", "*.txt", "*.jinja", "*.bin"]
+        rev = self.commit() or self.revision
+        try:
+            return Path(
+                snapshot_download(
+                    self.name, revision=rev, allow_patterns=patterns, local_files_only=True
+                )
+            )
+        except Exception:
+            return Path(snapshot_download(self.name, revision=rev, allow_patterns=patterns))
+
+    def fingerprint(self, weights: bool = True) -> dict:
+        from modeldiffr.fingerprint import tokenizer_fingerprint, weights_fingerprint
+
+        directory = self.source_dir()
+        out = {
+            "commit": self.commit(),
+            "tokenizer": tokenizer_fingerprint(self.tokenizer, directory),
+        }
+        out["weights"] = weights_fingerprint(directory).to_dict() if weights else None
+        return out
+
     def metadata(self) -> dict:
         config = self.model.config
         return {
@@ -110,6 +151,9 @@ class HFBackend:
         picked = logprobs.gather(1, targets.unsqueeze(1)).squeeze(1)
         return float(picked[start - 1 :].sum())
 
+    def render_chat(self, prompt: str) -> str:
+        return self._chat_prompt(prompt)
+
     def _chat_prompt(self, prompt: str) -> str:
         if getattr(self.tokenizer, "chat_template", None):
             return self.tokenizer.apply_chat_template(
@@ -120,8 +164,10 @@ class HFBackend:
         return f"User: {prompt}\nAssistant:"
 
     def generate(self, prompt: str, max_new_tokens: int) -> str:
+        return self.generate_raw(self._chat_prompt(prompt), max_new_tokens)
+
+    def generate_raw(self, text: str, max_new_tokens: int) -> str:
         torch = self._torch
-        text = self._chat_prompt(prompt)
         inputs = self.tokenizer(text, return_tensors="pt", add_special_tokens=False).to(self.device)
         with torch.no_grad():
             output = self.model.generate(
