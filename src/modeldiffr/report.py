@@ -2,27 +2,6 @@ import html
 import json
 from pathlib import Path
 
-_CSS = """
-:root{--bg:#fbfaf7;--fg:#1d1d1b;--muted:#6b6a64;--line:#e4e1d8;--card:#ffffff;
---up:#1f7a4d;--down:#b3261e;--flat:#6b6a64;--moved:#9a5b00}
-@media (prefers-color-scheme:dark){:root{--bg:#141413;--fg:#ecebe6;--muted:#9c9a92;
---line:#2c2b28;--card:#1c1c1a;--up:#5cc28f;--down:#f07a70;--flat:#9c9a92;--moved:#e8b04a}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);
-font:15px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:960px;margin:0 auto;padding:32px 16px 64px}
-h1{font-size:26px;margin:0 0 4px}h2{font-size:18px;margin:32px 0 12px}
-.muted{color:var(--muted)}.card{background:var(--card);border:1px solid var(--line);
-border-radius:10px;padding:16px;overflow-x:auto}
-table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:8px 10px;
-border-bottom:1px solid var(--line);vertical-align:top}th{font-weight:600;font-size:13px;
-color:var(--muted)}td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
-.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;
-border:1px solid currentColor;white-space:nowrap}.better{color:var(--up)}.worse{color:var(--down)}
-.flat{color:var(--flat)}.moved{color:var(--moved)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px}
-details{margin-top:8px}summary{cursor:pointer;color:var(--muted)}
-"""
-
 
 def _fmt(value: float) -> str:
     return f"{value:+.4f}" if isinstance(value, float) else str(value)
@@ -44,7 +23,47 @@ def _model_card(title: str, meta: dict) -> str:
         f"<tr><th>{html.escape(str(k))}</th><td><code>{html.escape(str(v))}</code></td></tr>"
         for k, v in meta.items()
     )
-    return f'<div class="card"><h3>{title}</h3><table>{rows}</table></div>'
+    return f'<section class="sheet"><h2>{title}</h2><table>{rows}</table></section>'
+
+
+def _forest(metrics: list[dict]) -> str:
+    shown = [m for m in metrics if m.get("directional", True)]
+    if not shown:
+        return ""
+    lo = min([0.0] + [m["ci_low"] for m in shown])
+    hi = max([0.0] + [m["ci_high"] for m in shown])
+    pad = (hi - lo) * 0.08 or 0.01
+    lo, hi = lo - pad, hi + pad
+    width, left, right, row, top = 720, 230, 80, 30, 24
+    plot = width - left - right
+
+    def x(v: float) -> float:
+        return round(left + (v - lo) / (hi - lo) * plot, 1)
+
+    height = top + row * len(shown) + 10
+    parts = [
+        f'<svg class="forest" width="{width}" height="{height}" viewBox="0 0 {width} {height}" role="img" '
+        'aria-label="Change per metric with 95 percent intervals">',
+        f'<line class="zero" x1="{x(0)}" x2="{x(0)}" y1="6" y2="{height - 4}"/>',
+        f'<text class="num" x="{x(0)}" y="14" text-anchor="middle">0</text>',
+    ]
+    if x(0) - x(lo) > 70:
+        parts.append(f'<text class="num" x="{x(lo)}" y="14">{lo:+.3f}</text>')
+    if x(hi) - x(0) > 70:
+        parts.append(f'<text class="num" x="{x(hi)}" y="14" text-anchor="end">{hi:+.3f}</text>')
+    for i, m in enumerate(shown):
+        y = top + i * row + row / 2
+        tone, _ = _direction(m)
+        parts.append(
+            f"<g><title>{html.escape(m['name'])}: {m['delta']:+.4f} "
+            f"[{m['ci_low']:+.4f}, {m['ci_high']:+.4f}]</title>"
+            f'<text x="0" y="{y + 4}">{html.escape(m["name"])}</text>'
+            f'<line class="ci {tone}" x1="{x(m["ci_low"])}" x2="{x(m["ci_high"])}" y1="{y}" y2="{y}"/>'
+            f'<circle class="{tone}" cx="{x(m["delta"])}" cy="{y}" r="4.5"/>'
+            f'<text class="num" x="{width}" y="{y + 4}" text-anchor="end">{m["delta"]:+.3f}</text></g>'
+        )
+    parts.append("</svg>")
+    return "".join(parts)
 
 
 def render_html(result: dict) -> str:
@@ -143,41 +162,34 @@ def render_html(result: dict) -> str:
             f"{wd['added_count']} added, {wd['removed_count']} removed.</p>"
             f"<details><summary>Changed tensors</summary><ul>{names}</ul></details>"
         )
-    return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Modeldiffr Audit Report</title><style>{_CSS}</style></head>
-<body><main>
-<h1>Modeldiffr audit</h1>
-<p class="muted">{e(result["base"]["model_id"])} compared with {e(result["derivative"]["model_id"])}
- &middot; suite <code>{e(result["suite"]["name"])}</code> &middot; {e(result["created_at"])}</p>
-<div class="card"><strong>{e(headline)}</strong>
-<div class="muted">95% bootstrap confidence intervals, {settings["n_resamples"]} resamples, seed {settings["seed"]}.
-A change counts only when its interval excludes zero and it survives the false discovery rate
-correction across all metrics (q = {settings.get("fdr_q", 0.05)}). Changes smaller than a metric's minimum effect are marked negligible.</div></div>
-<h2>Metrics</h2>
-<div class="card"><table><thead><tr><th>Metric</th><th>Base</th><th>Derivative</th>
-<th>Delta</th><th>95% CI</th><th>p</th><th>Verdict</th></tr></thead><tbody>{"".join(metric_rows)}</tbody></table></div>
-<h2>Comparability</h2>
-<div class="card"><ul>{issue_rows}</ul>
-<div class="muted">Prompt template: {e(str(settings.get("template_mode", "own")))}</div></div>
-<h2>Weights</h2>
-<div class="card">{weights_html}</div>
-<h2>Proof</h2>
-<div class="card"><table>{proof_rows}</table>
-<div class="muted">Check this report with <code>modeldiffr verify report.json</code>.</div></div>
-<h2>Models</h2>
+    from modeldiffr.theme import page
+
+    changed_tag = "worse" if changed else "better"
+    body = f"""
+<h1>{e(result["derivative"]["model_id"])}</h1>
+<p class="lede">compared with <b>{e(result["base"]["model_id"])}</b> on the {e(result["suite"]["name"])} suite, {e(result["created_at"])}</p>
+<p><span class="tag {changed_tag}">{e(headline)}</span></p>
+<section class="sheet"><h2>Change in each metric, derivative minus base</h2>
+{_forest(result["metrics"])}
+<p class="muted">95% bootstrap intervals from {settings["n_resamples"]} resamples, seed {settings["seed"]}. A change counts only when its interval excludes zero and it survives the false discovery rate correction across all metrics (q = {settings.get("fdr_q", 0.05)}). Changes smaller than a metric's minimum effect are marked negligible. Divergence metrics have no better or worse direction and are listed in the table only.</p></section>
+<section class="sheet"><h2>Metrics</h2>
+<table><thead><tr><th>Metric</th><th>Base</th><th>Derivative</th>
+<th>Delta</th><th>95% CI</th><th>p</th><th>Verdict</th></tr></thead><tbody>{"".join(metric_rows)}</tbody></table></section>
+<div class="grid">
+<section class="sheet"><h2>Comparability</h2><ul>{issue_rows}</ul>
+<p class="muted">Prompt template: {e(str(settings.get("template_mode", "own")))}</p></section>
+<section class="sheet"><h2>Weights</h2>{weights_html}</section>
+</div>
+<section class="sheet"><h2>Proof</h2><table>{proof_rows}</table>
+<p class="muted">Check this report with <code>modeldiffr verify report.json</code>, or against the real weights with <code>--models</code>.</p></section>
 <div class="grid">{_model_card("Base", result["base"])}{_model_card("Derivative", result["derivative"])}</div>
-<h2>Plan</h2>
-<div class="card"><table><thead><tr><th>Task</th><th>Items</th><th>Detectable change at 80% power</th></tr></thead>
-<tbody>{plan_rows}</tbody></table></div>
-<h2>Item details</h2>
-<div class="card">{"".join(detail_blocks)}</div>
-<h2>Notes</h2><div class="card"><ul>{notes}</ul>
-<div class="muted">modeldiffr {e(result["modeldiffr_version"])} &middot; schema {e(result["schema_version"])}
- &middot; wall time {result["wall_time_seconds"]}s &middot; python {e(result["environment"]["python"])}</div></div>
-</main></body></html>
+<section class="sheet"><h2>Plan</h2><table><thead><tr><th>Task</th><th>Items</th><th>Detectable change at 80% power</th></tr></thead>
+<tbody>{plan_rows}</tbody></table></section>
+<section class="sheet"><h2>Item details</h2>{"".join(detail_blocks)}</section>
+<section class="sheet"><h2>Notes</h2><ul>{notes}</ul></section>
+<footer>modeldiffr {e(result["modeldiffr_version"])}, schema {e(result["schema_version"])}, wall time {result["wall_time_seconds"]}s, python {e(result["environment"]["python"])}.</footer>
 """
+    return page(f"Audit: {result['derivative']['model_id']}", body)
 
 
 def write_reports(result: dict, out_dir: str | Path) -> tuple[Path, Path]:
