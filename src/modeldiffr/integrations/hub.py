@@ -15,6 +15,8 @@ FILES = (
     "features.html",
     "causal.json",
     "causal.html",
+    "scan.json",
+    "scan.html",
 )
 
 

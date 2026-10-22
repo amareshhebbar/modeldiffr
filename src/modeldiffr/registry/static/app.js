@@ -147,6 +147,13 @@
         c.base_only + "</strong><span>lost</span></li><li><strong>" + c.shifted + "</strong><span>shifted</span></li></ul>" +
         '<p>Crosscoder at layer ' + a.features.layer + '. <a href="' + dir + 'features.html">Open the feature report</a> to read examples for each feature.</p>';
     }
+    if (a.scan) {
+      $("#featsec").hidden = false;
+      const s = a.scan;
+      $("#feats").insertAdjacentHTML("beforeend", "<p>" + (s.flagged
+        ? "The rare input scan flagged this model for review (" + s.outliers + " outlying probes). A flag is a lead, not a finding."
+        : "The rare input scan found nothing above its threshold.") + ' <a href="' + dir + 'scan.html">Open the scan report</a>.</p>');
+    }
     if (a.causal) {
       $("#featsec").hidden = false;
       const c = a.causal;
