@@ -8,9 +8,9 @@ This file is the public plan. It is mirrored on the [documentation site](https:/
 | --- | --- | --- |
 | 0. Foundation | 0.1 | Shipped |
 | 1. Trustworthy core | 0.2 | Shipped |
-| 2. Behavioral layer MVP | 0.3 | **Shipped** |
-| 3. Proof, signing and integrations | 0.4 | Next |
-| 4. Public audits and launch | 0.5 | Planned |
+| 2. Behavioral layer MVP | 0.3 | Shipped |
+| 3. Proof, signing and integrations | 0.4 | **Shipped** |
+| 4. Public audits and launch | 0.5 | Next |
 | 5. Representational layer | 0.6 | Planned |
 | 6. Causal layer | 0.7 | Planned |
 | 7. Anomaly scan | 0.8 | Research |
@@ -76,19 +76,22 @@ A behavioral audit people would use for a release decision.
 * [ ] Measured GPU hours per suite on common GPUs, published here
 * [ ] vLLM and llama.cpp backends exercised on real hardware in CI
 
-## Phase 3: Proof, signing and integrations (0.4)
+## Phase 3: Proof, signing and integrations (0.4, shipped)
 
 Audits become evidence that tools and people can check.
 
-* [ ] Sigstore signing (keyless with OpenID Connect, or an offline Ed25519 key)
-* [ ] in toto attestation with a published predicate type, usable by cosign and policy engines
-* [ ] Rekor transparency log inclusion check in `verify`
-* [ ] Verification of OpenSSF model signing signatures on audited repos
-* [ ] Optional public timestamps: OpenTimestamps on Bitcoin, Ethereum Attestation Service on an L2, batched so one anchor covers many audits. Only hashes go on chain
-* [ ] Commit and reveal for private holdout suites
-* [ ] GitHub Action that gates checkpoints and uploads a signed report
-* [ ] Hugging Face integration: audit from a Hub URL, upload the report, model card badge
-* [ ] AI bill of materials export (CycloneDX ML BOM, SPDX 3 AI profile)
+* [x] Sigstore signing (keyless with OpenID Connect) and offline Ed25519 keys, both as DSSE envelopes
+* [x] in toto Statement v1 with the predicate type `https://modeldiffr.dev/attestation/audit/v1`, bound to the report in `verify`
+* [x] Rekor transparency log inclusion checked as part of Sigstore bundle verification
+* [x] Verification of OpenSSF model signing signatures (`model.sig`) on audited models
+* [x] Optional public timestamps: OpenTimestamps on Bitcoin (calendars batch many audits into one transaction) and the Ethereum Attestation Service on an L2. Only hashes go on chain
+* [x] Commit and reveal for private holdout suites
+* [x] GitHub Action that gates checkpoints, signs and uploads the report
+* [x] Hugging Face integration: audit from a Hub URL, upload the report, model card badge
+* [x] AI bill of materials export (CycloneDX 1.6, SPDX 3.0.1 AI profile)
+* [ ] Sigstore and EAS exercised against the live services in CI (tested against the real libraries offline today)
+
+See [Attestations](https://modeldiffr.netlify.app/concepts/attestation/).
 
 ## Phase 4: Public audits and launch (0.5)
 
@@ -129,7 +132,7 @@ Audits become evidence that tools and people can check.
 
 ## Not claimed yet
 
-> Modeldiffr does not yet detect backdoors or hidden behaviors. That claim will only be made after Phase 7 validation is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; signing in Phase 3 adds accountability.
+> Modeldiffr does not yet detect backdoors or hidden behaviors. That claim will only be made after Phase 7 validation is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; a signature adds accountability, not proof of honest execution.
 
 ## Acknowledgements
 

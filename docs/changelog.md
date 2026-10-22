@@ -7,6 +7,25 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## 0.4.0
+
+*October 2026*
+
+### Phase 3: proof, signing and integrations
+
+**Added**
+
+* Every report can be signed as an in toto Statement v1 with predicate type `https://modeldiffr.dev/attestation/audit/v1`. See [Attestations](concepts/attestation.md).
+* `modeldiffr keygen` and `modeldiffr sign`: Ed25519 keys or Sigstore keyless signing, both as DSSE envelopes. `audit --sign-key` and `audit --sigstore` sign right after the run.
+* `verify --key`, `--identity`, `--issuer`, `--staging` and `--rpc`. Signatures must match the report's audit id, results root, statement hash and verdict.
+* OpenSSF model signing check for `model.sig` in audited models.
+* `modeldiffr anchor ots`, `anchor upgrade` and `anchor eas`. Only hashes are published.
+* `modeldiffr commit` and `modeldiffr reveal` for private holdout suites.
+* `modeldiffr bom` for CycloneDX 1.6 and SPDX 3.0.1.
+* `modeldiffr hub push`, `modeldiffr badge`, and Hub URLs as model references.
+* A GitHub Action that audits, gates, signs and uploads the report.
+* Extras `sign` and `anchor`.
+
 ## 0.3.0
 
 *October 2026*
