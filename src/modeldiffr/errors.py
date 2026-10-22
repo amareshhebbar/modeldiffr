@@ -1,0 +1,2 @@
+class ModeldiffrError(RuntimeError):
+    pass
