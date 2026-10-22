@@ -14,7 +14,8 @@ This file is the public plan. It is mirrored on the [documentation site](https:/
 | 5. Representational layer | 0.6 | **Shipped** |
 | 6. Causal layer | 0.7 | **Shipped** |
 | 7. Anomaly scan | 0.8 | **Shipped, rates not yet published** |
-| 8. v1.0 and technical report | 1.0 | Planned |
+| 8. Toward v1.0 | 0.9 | **Tooling shipped** |
+| v1.0 | 1.0 | When the exit criteria below are met |
 
 ## What v1.0 means
 
@@ -140,12 +141,20 @@ See [Causal layer](https://modeldiffr.netlify.app/concepts/causal/).
 
 See [Anomaly scan](https://modeldiffr.netlify.app/concepts/anomaly/).
 
-## Phase 8: v1.0 and technical report
+## Phase 8: Toward v1.0 (0.9, tooling shipped)
 
+* [x] `modeldiffr study` turns a folder of audits into tables by derivative kind and by metric, as Markdown, CSV, LaTeX and JSON
+* [x] JSON Schemas for features, causal and scan files and for the attestation predicate, checked by `verify`
+* [x] Report schema 0.3 declared the 1.0 candidate, with the [compatibility promise](https://modeldiffr.netlify.app/reference/compatibility/) written down
+* [x] Governance, maintainers and release process documented
+* [x] Technical report draft with methods written, in the docs and as LaTeX
 * [ ] Scale study of 25 or more popular derivative models, all signed
-* [ ] Report schema 1.0 and attestation predicate 1.0 with a compatibility promise
 * [ ] Technical report on arXiv
 * [ ] At least two maintainers outside the founder
+
+## v1.0
+
+Released when every measured exit criterion in [What v1.0 means](#what-v10-means) is met and published. Until then the version stays below 1.0, however complete the code is.
 
 ## Not claimed yet
 

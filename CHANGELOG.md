@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.9.0 (October 2026)
+
+Phase 8: toward v1.0.
+
+### Added
+
+* `modeldiffr study`: tables by derivative kind and by metric from a folder of audits, as `study.md`, `study.csv`, `study.tex` and `study.json`. Batch specs accept `kind`.
+* JSON Schemas for `features.json`, `causal.json`, `scan.json` and the attestation predicate; `verify` validates artifacts against them.
+* Report schema 0.3 is the 1.0 candidate; the compatibility promise is documented.
+* `GOVERNANCE.md`, `MAINTAINERS.md`, `RELEASING.md`, and a technical report draft in `paper/`.
+
+### Changed
+
+* Documentation redesigned: new home page, typography, color system, dark mode and page layouts. Report, feature, causal and scan pages share one visual system.
+
 ## 0.8.0 (October 2026)
 
 Phase 7: anomaly scan.
