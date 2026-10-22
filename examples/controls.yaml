@@ -1,0 +1,30 @@
+out: control_audits
+defaults:
+  suite: lite
+  base: Qwen/Qwen2.5-0.5B-Instruct
+  dtype: bfloat16
+audits:
+  - name: identity-seed0
+    control: {kind: identity}
+  - name: identity-seed1
+    control: {kind: identity}
+    seed: 1
+  - name: identity-seed2
+    control: {kind: identity}
+    seed: 2
+  - name: noise-0.05
+    control: {kind: noise, strength: 0.05}
+  - name: noise-0.10
+    control: {kind: noise, strength: 0.10}
+  - name: noise-0.20
+    control: {kind: noise, strength: 0.20}
+  - name: noise-0.40
+    control: {kind: noise, strength: 0.40}
+  - name: prune-0.30
+    control: {kind: prune, strength: 0.30}
+  - name: prune-0.60
+    control: {kind: prune, strength: 0.60}
+  - name: zero-last-mlp
+    control: {kind: zero, match: 'layers\.23\.mlp\.down_proj\.weight$'}
+  - name: scale-mlp-0.5
+    control: {kind: scale, strength: 0.5, match: 'mlp\.down_proj\.weight$'}
