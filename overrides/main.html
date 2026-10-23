@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+{{ super() }}
+{% set page_url = page.canonical_url or "" %}
+<aside class="mdr-feedback" aria-label="Report a problem with this page">
+  <p>Something wrong or unclear on this page?</p>
+  <div class="mdr-feedback__links">
+    <a href="https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml&labels=bug&title={{ ('Docs: ' ~ (page.title or 'page')) | urlencode }}&what={{ ('Page: ' ~ page_url ~ '\n\nWhat is wrong:\n') | urlencode }}">Report it on GitHub</a>
+    <a href="mailto:hebbar.gvamaresh@gmail.com?subject={{ ('Modeldiffr docs: ' ~ (page.title or 'page')) | urlencode }}&body={{ ('Page: ' ~ page_url ~ '\n\n') | urlencode }}">Email the maintainer</a>
+  </div>
+</aside>
+{% endblock %}

@@ -54,6 +54,12 @@ extra:
       link: https://github.com/amareshhebbar/modeldiffr
     - icon: fontawesome/brands/python
       link: https://pypi.org/project/modeldiffr/
+    - icon: fontawesome/solid/bug
+      link: https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml
+      name: Report a bug
+    - icon: fontawesome/solid/envelope
+      link: mailto:hebbar.gvamaresh@gmail.com?subject=Modeldiffr
+      name: Email the maintainer
 
 markdown_extensions:
   - admonition
@@ -121,6 +127,7 @@ nav:
           - roadmap.md
           - paper.md
           - governance.md
+          - support.md
           - limitations.md
           - responsible_use.md
           - contributing.md

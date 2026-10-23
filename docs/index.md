@@ -79,6 +79,18 @@ verified
 
 </div>
 
+## Talk to the maintainer { .mdr-section-title }
+
+<div class="mdr-contact" markdown>
+
+[**Report a bug**<br><span>Opens a GitHub issue with the bug form.</span>](https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml)
+
+[**Request a feature**<br><span>A metric, suite or backend you need.</span>](https://github.com/amareshhebbar/modeldiffr/issues/new?template=feature_request.yml)
+
+[**Email me**<br><span>hebbar.gvamaresh@gmail.com, for audits of your models or collaboration.</span>](mailto:hebbar.gvamaresh@gmail.com?subject=Modeldiffr)
+
+</div>
+
 <p class="mdr-status">Version 0.9: every layer has shipped. Version 1.0 waits for the published study and zoo results described in the <a href="roadmap/">roadmap</a>, and the backdoor scan makes no claim about real models until then.</p>
 
 </div>
