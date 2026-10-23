@@ -1,47 +1,55 @@
 <div align="center">
 
-# Modeldiffr
+<a href="https://modeldiffr.netlify.app">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/dark.svg">
+    <img alt="Modeldiffr" src="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/light.svg" height="44">
+  </picture>
+</a>
 
-**Know exactly what changed inside a model before you ship it.**
+### Know what changed between a model and anything built from it.
 
-[![PyPI](https://img.shields.io/pypi/v/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
-[![Python](https://img.shields.io/pypi/pyversions/modeldiffr?v=1)](https://pypi.org/project/modeldiffr/)
+[![PyPI](https://img.shields.io/pypi/v/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
+[![Python](https://img.shields.io/pypi/pyversions/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
-[![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr)](LICENSE)
-[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-18202B)](https://modeldiffr.netlify.app)
+[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-2D5BD7)](https://modeldiffr.netlify.app)
+[![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](LICENSE)
+
+**[Documentation](https://modeldiffr.netlify.app)** |
+[Quickstart](https://modeldiffr.netlify.app/quickstart/) |
+[CLI reference](https://modeldiffr.netlify.app/reference/cli/overview/) |
+[Roadmap](https://modeldiffr.netlify.app/roadmap/) |
+[Report a bug](https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml) |
+[Contact](https://modeldiffr.netlify.app/support/)
 
 </div>
 
-Modeldiffr audits the difference between a **base** language model and a **derivative** of it: a fine tune, a quantized build, a merge, or an edited checkpoint. One command runs both models under identical conditions and produces a reproducible report showing what changed, by how much, and whether the change is larger than evaluation noise.
+Modeldiffr audits a **derivative** language model against its **base**: a fine tune, a quantized build, a merge or an edited checkpoint. Both models answer the same items under the same template. Every change comes with a paired interval, and the report is bound to the exact weights, so anyone can verify it.
 
 ```bash
 pip install "modeldiffr[hf]"
 modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune
 ```
 
+> **Preview, v0.9.** Every layer has shipped. Version 1.0 waits for the published study and model zoo results described in the [roadmap](https://modeldiffr.netlify.app/roadmap/). Report schema 0.3 is the 1.0 candidate.
+
 ## Why
 
-Hugging Face hosts hundreds of thousands of derivative models. A model card might say "fine tuned for medical Q&A" or "4 bit, near lossless", but nobody can cheaply check whether general capability dropped, whether safety behavior shifted, or whether a merge is actually better than its parents. Benchmarks run by hand show that a score moved, not whether the move is real, and comparisons are often unfair because prompts, templates, or decoding settings differ between runs.
+Hugging Face hosts hundreds of thousands of derivative models. A model card might say "fine tuned for medical Q&A" or "4 bit, near lossless", but nobody can cheaply check whether general capability dropped, whether safety behavior shifted, or whether a merge is actually better than its parents. Benchmarks run by hand show that a score moved, not whether the move is real, and comparisons are often unfair because prompts, templates or decoding settings differ between runs.
 
-Modeldiffr makes the comparison fair, statistical, and repeatable.
-
-## Status
-
-> **Preview (v0.9), every layer shipped.** Thirteen standard benchmarks with corrected statistics; four backends; every report fingerprinted, verifiable and signable, with optional public timestamps; controls, batch audits, study tables and a registry that verifies audits in the browser; crosscoders that find new, lost and shifted features; causal checks; and an anomaly scan that ships with a model zoo to measure its own accuracy. Version 1.0 waits for the published study and zoo results; report schema 0.3 is the 1.0 candidate.
-
-Documentation: [modeldiffr.netlify.app](https://modeldiffr.netlify.app)
+Modeldiffr makes the comparison fair, statistical, repeatable and checkable.
 
 ## What it answers
 
-| Question | Command | Since |
+| Question | Commands | Read more |
 | --- | --- | --- |
-| Which exact models, items and settings were compared, and can anyone check that? | `modeldiffr verify`, `sign`, `anchor` | 0.2, 0.4 |
-| What changed on thirteen standard benchmarks, and is it larger than noise? | `modeldiffr audit` | 0.3 |
-| Which layers moved, and which features are new, lost or reshaped? | `modeldiffr layers`, `features` | 0.6 |
-| How much of a behavioral change do those layers and features carry? | `modeldiffr causal` | 0.7 |
-| Is there an input where the derivative behaves unlike its base? | `modeldiffr scan`, `zoo` | 0.8 |
+| Which exact models, items and settings were compared, and can anyone check that? | `verify` `sign` `anchor` | [Fingerprints and proof](https://modeldiffr.netlify.app/concepts/proof/), [Attestations](https://modeldiffr.netlify.app/concepts/attestation/) |
+| What changed on thirteen standard benchmarks, and is it larger than noise? | `audit` | [Statistics](https://modeldiffr.netlify.app/concepts/statistics/), [Suites](https://modeldiffr.netlify.app/concepts/suites/) |
+| Which layers moved, and which features are new, lost or reshaped? | `layers` `features` | [Representational layer](https://modeldiffr.netlify.app/concepts/representational/) |
+| How much of a behavioral change do those layers and features carry? | `causal` | [Causal layer](https://modeldiffr.netlify.app/concepts/causal/) |
+| Is there an input where the derivative behaves unlike its base? | `scan` `zoo` | [Anomaly scan](https://modeldiffr.netlify.app/concepts/anomaly/) |
 
-Every behavioral metric is reported as a **paired delta with a 95% bootstrap interval**, corrected for multiple comparisons, with a minimum effect below which a change is called negligible. Identical models produce a clean report and noisy wobbles are not reported as findings.
+Every behavioral metric is a **paired delta with a 95% bootstrap interval**, corrected for multiple comparisons, with a minimum effect below which a change is called negligible. Identical models produce a clean report.
 
 ## Install
 
@@ -49,23 +57,23 @@ Every behavioral metric is reported as a **paired delta with a 95% bootstrap int
 pip install "modeldiffr[hf]"
 ```
 
-The `hf` extra installs PyTorch and Transformers. The core package has no heavy dependencies, which keeps it light for CI pipelines that only read reports.
+| Extra | Adds | Use it for |
+| --- | --- | --- |
+| `hf` | PyTorch, Transformers | Running audits and the interpretability commands |
+| `tasks` | Datasets | The `lite`, `standard` and `full` suites |
+| `vllm`, `llamacpp` | vLLM, llama.cpp | Fast GPU generation, GGUF builds |
+| `proof` | jsonschema | Full schema checks in `verify` |
+| `sign`, `anchor` | cryptography, Sigstore, OpenTimestamps, web3 | Signing and public timestamps |
+| `batch` | PyYAML | YAML batch specs |
+| `all` | Everything above except vLLM and llama.cpp | |
 
-From source:
-
-```bash
-git clone https://github.com/amareshhebbar/modeldiffr.git
-cd modeldiffr
-pip install -e ".[hf,dev]"
-```
+The core package has no dependencies, which keeps it light for CI jobs that only read reports. See [Installation](https://modeldiffr.netlify.app/installation/).
 
 ## Quickstart
 
 ```bash
-modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --out reports/qwen_instruct_vs_base
+modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --out reports/qwen
 ```
-
-Terminal output:
 
 ```text
 audit id mdr1:71e153dc730bb9ec20b7159dc8845afab76de27ddf94b99cada26c713aa3170d
@@ -75,53 +83,57 @@ capability_accuracy      base 0.7917  derivative 0.7500  delta -0.0417  95% CI [
 over_refusal_rate        base 0.1000  derivative 0.0000  delta -0.1000  95% CI [-0.2500, +0.0000]  within noise
 output_divergence_kl     base 0.0000  derivative 0.4120  delta +0.4120  95% CI [+0.3051, +0.5233]  CHANGED
 
-report: reports/qwen_instruct_vs_base/report.html
-json:   reports/qwen_instruct_vs_base/report.json
+report: reports/qwen/report.html
+json:   reports/qwen/report.json
 ```
 
-*The numbers above illustrate the format only; run the command to get real values for your models.*
+*These numbers show the format only. Run the command to get real values for your models.*
 
-The output directory contains:
+`report.html` is a self contained page you can open anywhere or attach to a pull request. `report.json` holds every item, setting and hash. Full walkthrough: [Quickstart](https://modeldiffr.netlify.app/quickstart/).
 
-* `report.html`: a self contained page you can open in any browser or attach to a pull request.
-* `report.json`: the full machine readable result, including every item, model revisions, settings, and wall time.
+## Common tasks
 
-### Useful options
-
-* `--suite`: `quick` (built in, default), `lite`, `standard` or `full`; `modeldiffr suites` and `modeldiffr tasks` list them.
-* `--tasks` and `--limit`: run only some tasks, or fewer items per task.
-* `--backend`, `--base-backend`, `--derivative-backend`: `hf`, `vllm`, `llamacpp` or `api`.
-* `--device`: `auto`, `cpu`, `cuda`, `cuda:0`, or `mps`. Default `auto`.
-* `--dtype`: `auto`, `float32`, `float16`, or `bfloat16`.
-* `--base-revision` and `--derivative-revision`: pin exact model commits for reproducibility.
-* `--seed`: seed for the bootstrap. Default `0`.
-* `--fail-on-change`: exit with code 1 when any metric changes significantly.
-* `--template`: which chat template renders generation prompts; `auto` gives both models identical text.
-
-### Standard benchmarks
+### Run standard benchmarks
 
 ```bash
 pip install "modeldiffr[hf,tasks]"
-modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune --suite standard --plan-only --estimate
-modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune --suite standard
-modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct ./qwen-q4_k_m.gguf --base-backend hf --suite lite
+modeldiffr audit BASE DERIVATIVE --suite standard --plan-only --estimate
+modeldiffr audit BASE DERIVATIVE --suite standard
 ```
 
-MMLU, ARC Challenge, HellaSwag, TruthfulQA, GSM8K, MGSM, IFEval, XSTest, OR Bench, HumanEval, a long context needle test and output divergence, every dataset pinned to a commit. Each metric gets a paired interval, a p value, a false discovery rate correction across all metrics, and a minimum effect below which a change is called negligible. Try it on a free GPU with the [Colab notebook](notebooks/colab_lite_audit.ipynb).
+MMLU, ARC Challenge, HellaSwag, TruthfulQA, GSM8K, MGSM, IFEval, XSTest, OR Bench, HumanEval, a long context needle test and output divergence, every dataset pinned to a commit. Try it on a free GPU with the [Colab notebook](notebooks/colab_lite_audit.ipynb). See [Suites and tasks](https://modeldiffr.netlify.app/concepts/suites/).
+
+### Audit a quantized build
+
+```bash
+modeldiffr audit Qwen/Qwen2.5-1.5B-Instruct \
+  Qwen/Qwen2.5-1.5B-Instruct-GGUF:qwen2.5-1.5b-instruct-q4_k_m.gguf \
+  --base-backend hf --suite lite
+```
+
+See [Backends](https://modeldiffr.netlify.app/guides/backends/).
 
 ### Verify any report
 
-Every report hashes both models tensor by tensor, every question and every result. Anyone can check it without trusting the author:
-
 ```bash
-modeldiffr verify reports/qwen_instruct_vs_base/report.json
-modeldiffr verify reports/qwen_instruct_vs_base/report.json --models
-modeldiffr fingerprint Qwen/Qwen2.5-0.5B-Instruct
+modeldiffr verify report.json
+modeldiffr verify report.json --models
 ```
 
-`--models` also hashes the real model files at the recorded commits. See [Fingerprints and proof](https://modeldiffr.netlify.app/concepts/proof/).
+`--models` also hashes the real model files at the recorded commits. See [Verify a report](https://modeldiffr.netlify.app/guides/verify/).
 
-### Look inside
+### Sign and publish
+
+```bash
+modeldiffr keygen --out keys
+modeldiffr sign report.json --key keys/modeldiffr.key
+modeldiffr hub push audit --repo your-org/your-model
+modeldiffr registry build audits --out registry_site --key me=keys/modeldiffr.pub
+```
+
+See [Sign and verify](https://modeldiffr.netlify.app/guides/signing/), [Publish an audit](https://modeldiffr.netlify.app/guides/publishing/) and [Public registry](https://modeldiffr.netlify.app/guides/registry/).
+
+### Look inside the model
 
 ```bash
 modeldiffr layers BASE DERIVATIVE
@@ -132,29 +144,24 @@ modeldiffr scan BASE DERIVATIVE --out audit
 
 See [Find changed features](https://modeldiffr.netlify.app/guides/features/), [Test what drives a change](https://modeldiffr.netlify.app/guides/causal/) and [Scan for hidden behavior](https://modeldiffr.netlify.app/guides/scan/).
 
-### Publish
-
-```bash
-modeldiffr keygen --out keys
-modeldiffr batch examples/public_audits.yaml
-modeldiffr registry build audits --out registry_site --key modeldiffr=keys/modeldiffr.pub
-modeldiffr study audits --out study
-```
-
-### Use it as a CI gate
+### Gate a checkpoint in CI
 
 ```yaml
-- name: Audit the new checkpoint
-  run: |
-    pip install "modeldiffr[hf]"
-    modeldiffr audit org/base_model ./checkpoints/candidate --fail-on-change --out audit
-- uses: actions/upload-artifact@v4
-  with:
-    name: modeldiffr_audit
-    path: audit/
+permissions:
+  id-token: write
+  contents: read
+steps:
+  - uses: actions/checkout@v4
+  - uses: amareshhebbar/modeldiffr@v0.9.0
+    with:
+      base: org/base_model
+      derivative: ./checkpoints/candidate
+      suite: lite
 ```
 
-### Python API
+The action audits, fails the job on a significant change, signs the report with Sigstore and uploads it. See [GitHub Action](https://modeldiffr.netlify.app/guides/publishing/#github-action) and [CI gate](https://modeldiffr.netlify.app/guides/ci_gate/).
+
+### Use it from Python
 
 ```python
 from modeldiffr import run_audit
@@ -169,41 +176,63 @@ write_reports(result, "audit")
 print(result["verdict"])
 ```
 
+See [Python usage](https://modeldiffr.netlify.app/guides/python_usage/).
+
 ## How it works
 
-1. Both models are fingerprinted (weights, tokenizer, chat template), checked for comparability, and the audit gets an id computed from everything that defines it.
-2. Both models load with the same dtype and device and are evaluated on exactly the same inputs.
-3. Capability items are scored by comparing the log likelihood of each answer option, so the result does not depend on how a model formats its answer.
-4. Generation for the over refusal check uses greedy decoding, with one shared chat template when the templates differ, so both models receive identical text.
-5. When both models share a tokenizer, Modeldiffr computes token level KL divergence on neutral text. When tokenizers differ, the metric is skipped and the report says so.
-6. Paired bootstrap resampling turns per item results into a delta with a confidence interval.
-7. Every result is hashed into the report, so `modeldiffr verify` can recompute it.
+1. Both models are fingerprinted (weights, tokenizer, chat template) and checked for comparability. The audit gets an id computed from everything that defines it, before anything runs.
+2. Both models run on exactly the same inputs, with one shared chat template when theirs differ.
+3. Multiple choice items are scored by log likelihood, so the result does not depend on answer formatting.
+4. Paired bootstrap resampling turns per item results into deltas with intervals and p values, corrected across all metrics.
+5. Every item and result is committed to in a Merkle tree, and a statement hash covers every claim, so `modeldiffr verify` can recompute the report.
+6. Optional layers look inside: crosscoders for features, patching for causal shares, and a scan for unusual inputs.
+
+Details: [How it works](https://modeldiffr.netlify.app/concepts/how_it_works/).
 
 ## Roadmap
 
-Modeldiffr is built in four layers. Full detail lives in [PLAN.md](PLAN.md).
+| Version | Shipped |
+| --- | --- |
+| 0.2 | Weight fingerprints, audit ids, `verify` |
+| 0.3 | Thirteen benchmarks, four backends, corrected statistics |
+| 0.4 | Signing, in toto attestations, public timestamps, bills of materials, GitHub Action, Hub upload |
+| 0.5 | Planted regression controls, batch audits, a registry that verifies in the browser |
+| 0.6 | Layer statistics, direction comparison, crosscoders with new, lost and shifted features |
+| 0.7 | Layer and feature patching and steering |
+| 0.8 | Anomaly scan and a model zoo that measures its accuracy |
+| 0.9 | Study tables, JSON Schemas, compatibility promise, governance, report draft |
+| 1.0 | When the public study and zoo results are published |
 
-* **Proof layer.** Which exact models, questions and results? *v0.2 fingerprints, audit id and verify; v0.4 Sigstore and key signing, in toto attestations, OpenTimestamps and EAS anchors, bill of materials, GitHub Action and Hub upload.*
-* **Layer 1, behavioral diff.** What changed in behavior? *v0.3 thirteen standard benchmarks, four backends, corrected statistics shipped.*
-* **Layer 2, representational diff.** Where inside the model did it change? *v0.6 layer statistics, direction comparison and BatchTopK crosscoders with new, lost and shifted features.*
-* **Layer 3, causal diff.** Does that internal change actually drive the behavior change? *v0.7 layer and feature patching and steering, with the share of each change explained.*
-* **Layer 4, anomaly scan.** Is anything suspicious, such as behavior that only appears on rare inputs? *v0.8 rare input sweep, trigger search and a model zoo that measures the scan's own accuracy; rates on public models will be published before any claim.*
+Full plan: [Roadmap](https://modeldiffr.netlify.app/roadmap/) and [PLAN.md](PLAN.md).
 
 ## Limitations
 
-* The built in `quick` suite is small (24 capability items, 20 over refusal prompts, 12 divergence texts). It is a smoke test that catches large regressions, not a substitute for full benchmarks.
-* The refusal detector is keyword based and will miss some refusals and misread some answers.
+* The built in `quick` suite is a smoke test. Use `lite`, `standard` or `full` for a release decision.
 * Large models need a GPU. Both models are held in memory at once.
-* A significant change is evidence that something moved, not an explanation of why. Layers 2 and 3 give leads and measured shares, not proofs.
+* A significant change shows that something moved, not why. Features and causal shares are leads, not proofs.
 * The anomaly scan makes no claim about real models until its rates on a public zoo are published.
+
+All of them: [Limitations](https://modeldiffr.netlify.app/limitations/).
+
+## Help and contact
+
+| Need | Where |
+| --- | --- |
+| Something is broken | [Report a bug](https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml) |
+| A metric, suite or backend you need | [Request a feature](https://github.com/amareshhebbar/modeldiffr/issues/new?template=feature_request.yml) |
+| Usage questions | [GitHub Discussions](https://github.com/amareshhebbar/modeldiffr/discussions) |
+| A security issue | [Private advisory](https://github.com/amareshhebbar/modeldiffr/security/advisories/new), see [SECURITY.md](SECURITY.md) |
+| Audits of your models, collaboration, anything else | [hebbar.gvamaresh@gmail.com](mailto:hebbar.gvamaresh@gmail.com?subject=Modeldiffr) |
+
+More: [Contact and support](https://modeldiffr.netlify.app/support/).
 
 ## Responsible use
 
-Modeldiffr is a measurement tool. It never modifies model weights, and its reports describe *what* changed and *how much*, not how to reproduce or reverse a change. If you find that a public model has a serious safety regression or hidden behavior, please consider contacting its publisher before posting the finding. See [SECURITY.md](SECURITY.md) for issues in Modeldiffr itself.
+Modeldiffr is a measurement tool. It never modifies model weights, and its reports describe *what* changed and *how much*, not how to reproduce or reverse a change. If you find a serious safety regression or hidden behavior in a public model, please contact its publisher before posting the finding. See [Responsible use](https://modeldiffr.netlify.app/responsible_use/).
 
 ## Contributing
 
-Contributions are welcome, from bug reports to new evaluation suites. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and look for issues labelled `good first issue`.
+Contributions are welcome, from bug reports to new evaluation suites. Start with [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md) and issues labelled `good first issue`.
 
 ## Citation
 
@@ -221,7 +250,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
 
 ## Acknowledgements
 
-The representational layer will build on crosscoder based model diffing, introduced in *Sparse Crosscoders for Cross Layer Features and Model Diffing* (Lindsey et al., Anthropic, 2024), and on the follow up research it inspired. Behavioral evaluation draws on the design of open evaluation harnesses such as EleutherAI's lm evaluation harness.
+The representational layer builds on crosscoder based model diffing, introduced in *Sparse Crosscoders for Cross Layer Features and Model Diffing* (Lindsey et al., Anthropic, 2024), and on the work that followed it. Behavioral evaluation draws on open harnesses such as EleutherAI's lm evaluation harness and UK AISI's Inspect. The proof layer follows RFC 8785 and RFC 6962 and interoperates with Sigstore and in toto.
 
 ## License
 

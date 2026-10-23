@@ -15,3 +15,51 @@
   from = "/docs/*"
   to = "/:splat"
   status = 301
+
+[[redirects]]
+  from = "/bug"
+  to = "https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/feature"
+  to = "https://github.com/amareshhebbar/modeldiffr/issues/new?template=feature_request.yml"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/discuss"
+  to = "https://github.com/amareshhebbar/modeldiffr/discussions"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/github"
+  to = "https://github.com/amareshhebbar/modeldiffr"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/pypi"
+  to = "https://pypi.org/project/modeldiffr/"
+  status = 302
+  force = true
+
+[[redirects]]
+  from = "/contact"
+  to = "/support/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/start"
+  to = "/quickstart/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/cli"
+  to = "/reference/cli/overview/"
+  status = 301
+  force = true

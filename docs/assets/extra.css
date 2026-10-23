@@ -254,7 +254,45 @@ input {
   border-radius: 8px;
   box-shadow: none;
   background: var(--mdr-sheet);
-  overflow: hidden;
+}
+
+.md-typeset table:not([class]) code {
+  white-space: nowrap;
+  word-break: normal;
+}
+
+.md-typeset table:not([class]) th,
+.md-typeset table:not([class]) td {
+  padding: 0.75em 1em;
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-typeset table:not([class]) {
+    font-size: 0.7rem;
+  }
+
+  .md-typeset table:not([class]) th,
+  .md-typeset table:not([class]) td {
+    padding: 0.6em 0.75em;
+    min-width: 6rem;
+  }
+
+  .md-typeset {
+    font-size: 0.8rem;
+  }
+
+  .mdr-hero .mdr-specimen {
+    padding: 0.9rem 0.8rem 0.8rem;
+  }
+
+  .mdr-hero .mdr-specimen text {
+    font-size: 19px;
+  }
+
+  .mdr-hero .mdr-specimen .axis text,
+  .mdr-hero .mdr-specimen text.num {
+    font-size: 17px;
+  }
 }
 
 .md-typeset table:not([class]) th {
@@ -729,9 +767,16 @@ input {
   color: var(--mdr-muted);
 }
 
+.mdr-hero__copy,
+.mdr-specimen,
+.mdr-install,
+.mdr-install code {
+  min-width: 0;
+}
+
 @media screen and (max-width: 76.1875em) {
   .mdr-hero__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
     padding: 2.4rem 0.8rem;
   }
@@ -765,5 +810,369 @@ input {
   .md-nav--primary > .md-nav__title,
   .md-nav--lifted > .md-nav__list > .md-nav__item--active > .md-nav__link {
     display: none;
+  }
+}
+
+@media screen and (max-width: 59.9375em) {
+  .md-main__inner {
+    margin-top: 0.8rem;
+  }
+
+  .md-content__inner {
+    margin-left: 1.2rem;
+    margin-right: 1.2rem;
+    padding-bottom: 1.6rem;
+  }
+
+  .md-typeset {
+    font-size: 0.74rem;
+    line-height: 1.65;
+  }
+
+  .md-typeset h1 {
+    font-size: 1.55rem;
+    margin-bottom: 0.5em;
+  }
+
+  .md-typeset h1 + p {
+    font-size: 0.82rem;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.05rem;
+    margin-top: 1.8em;
+    padding-top: 0.9em;
+  }
+
+  .md-typeset h3 {
+    font-size: 0.86rem;
+  }
+
+  .md-typeset p,
+  .md-typeset ul,
+  .md-typeset ol {
+    margin-top: 0.7em;
+    margin-bottom: 0.7em;
+  }
+
+  .md-typeset pre > code {
+    font-size: 0.62rem;
+    line-height: 1.55;
+    padding: 0.8em 0.9em;
+  }
+
+  .md-typeset code {
+    font-size: 0.78em;
+  }
+
+  .md-typeset table:not([class]) {
+    font-size: 0.64rem;
+  }
+
+  .md-typeset .admonition,
+  .md-typeset details {
+    font-size: 0.7rem;
+  }
+
+  .mdr-hero__grid {
+    padding: 1.8rem 1.2rem 2rem;
+    gap: 1.6rem;
+  }
+
+  .mdr-hero h1 {
+    font-size: 1.75rem;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    max-width: none;
+    margin-bottom: 0.8rem;
+  }
+
+  .mdr-hero__lede {
+    font-size: 0.78rem;
+    line-height: 1.6;
+    margin-bottom: 1.2rem;
+  }
+
+  .mdr-install {
+    max-width: none;
+  }
+
+  .mdr-install code {
+    font-size: 0.66rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .mdr-button {
+    font-size: 0.7rem;
+    padding: 0.6rem 0.9rem;
+  }
+
+  .md-typeset .mdr-section-title {
+    font-size: 1.15rem;
+    margin-top: 2rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .md-typeset .mdr-home > p {
+    font-size: 0.74rem;
+  }
+
+  .md-typeset .mdr-layers > li {
+    padding: 0.85rem 0;
+    gap: 0.25rem 0.8rem;
+  }
+
+  .mdr-layers__name {
+    font-size: 0.8rem;
+  }
+
+  .mdr-layers__q {
+    font-size: 0.72rem;
+    line-height: 1.55;
+  }
+
+  .mdr-layers__how {
+    font-size: 0.66rem;
+    gap: 0.4rem 0.6rem;
+    margin-top: 0.2rem;
+  }
+
+  .md-typeset .mdr-starts a {
+    padding: 0.85rem 1rem 0.95rem;
+  }
+
+  .md-typeset .mdr-starts a strong {
+    font-size: 0.78rem;
+  }
+
+  .md-typeset .mdr-starts a span {
+    font-size: 0.68rem;
+  }
+
+  .md-typeset .mdr-status {
+    font-size: 0.66rem;
+    margin-top: 1.8rem;
+  }
+
+  .md-typeset .mdr-link {
+    font-size: 0.74rem;
+  }
+}
+
+@media screen and (max-width: 29.9375em) {
+  .md-content__inner {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .mdr-hero__grid {
+    padding: 1.5rem 1rem 1.8rem;
+  }
+
+  .mdr-hero h1 {
+    font-size: 1.55rem;
+  }
+
+  .md-typeset h1 {
+    font-size: 1.4rem;
+  }
+
+  .mdr-actions .mdr-button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .md-typeset .mdr-layers > li {
+    grid-template-columns: 1.6rem minmax(0, 1fr);
+  }
+}
+
+.md-typeset .mdr-contact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 1rem;
+  border-top: 1px solid var(--mdr-rule);
+  border-left: 1px solid var(--mdr-rule);
+}
+
+.md-typeset .mdr-contact > p {
+  margin: 0;
+  display: contents;
+}
+
+.md-typeset .mdr-contact a {
+  display: block;
+  padding: 1rem 1.1rem 1.1rem;
+  border-right: 1px solid var(--mdr-rule);
+  border-bottom: 1px solid var(--mdr-rule);
+  color: var(--mdr-ink);
+  text-decoration: none;
+  background: var(--mdr-sheet);
+}
+
+.md-typeset .mdr-contact a strong {
+  font-weight: 600;
+}
+
+.md-typeset .mdr-contact a span {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.74rem;
+  line-height: 1.5;
+  color: var(--mdr-muted);
+  overflow-wrap: anywhere;
+}
+
+.md-typeset .mdr-contact a:hover {
+  background: var(--mdr-paper);
+}
+
+.md-typeset .mdr-contact a:focus-visible {
+  outline: 2px solid var(--mdr-base);
+  outline-offset: 2px;
+}
+
+.mdr-feedback {
+  margin: 3rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--mdr-rule);
+  font-size: 0.72rem;
+  color: var(--mdr-muted);
+}
+
+.mdr-feedback p {
+  margin: 0 0 0.4rem;
+}
+
+.mdr-feedback__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+}
+
+.mdr-feedback__links a {
+  color: var(--mdr-base);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--mdr-base) 35%, transparent);
+  text-underline-offset: 3px;
+}
+
+@media screen and (max-width: 59.9375em) {
+  .md-typeset .mdr-contact {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 44.9375em) {
+  .md-main__inner {
+    margin-top: 0.4rem;
+  }
+
+  .md-content__inner {
+    margin: 0 1.1rem 1.6rem;
+    padding-top: 0.4rem;
+  }
+
+  .md-content__inner > .tabbed-set .tabbed-labels {
+    margin: 0 -1.1rem;
+    padding-inline: 1.1rem;
+    max-width: calc(100% + 2.2rem);
+    scroll-padding-inline-start: 1.1rem;
+  }
+
+  .md-typeset {
+    font-size: 0.74rem;
+    line-height: 1.65;
+  }
+
+  .md-typeset h1 {
+    font-size: 1.45rem;
+    line-height: 1.12;
+  }
+
+  .md-typeset h1 + p {
+    font-size: 0.82rem;
+  }
+
+  .md-typeset h2 {
+    font-size: 1.02rem;
+    margin-top: 1.8em;
+  }
+
+  .md-typeset h3 {
+    font-size: 0.88rem;
+  }
+
+  .md-typeset pre > code {
+    font-size: 0.64rem;
+    padding: 0.8em 0.9em;
+  }
+
+  .md-typeset code {
+    font-size: 0.78em;
+  }
+
+  .md-typeset .admonition,
+  .md-typeset details {
+    font-size: 0.72rem;
+  }
+
+  .mdr-hero__grid {
+    padding: 1.8rem 1.1rem 2rem;
+    gap: 1.6rem;
+  }
+
+  .mdr-hero h1 {
+    font-size: 1.7rem;
+    line-height: 1.08;
+    margin-bottom: 0.8rem;
+  }
+
+  .mdr-hero__lede {
+    font-size: 0.8rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .mdr-install code {
+    font-size: 0.66rem;
+    padding: 0.6rem 0.7rem;
+  }
+
+  .mdr-button {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .md-typeset .mdr-section-title {
+    font-size: 1.15rem;
+    margin-top: 2rem;
+  }
+
+  .md-typeset .mdr-layers > li {
+    padding: 0.85rem 0;
+    gap: 0.2rem 0.6rem;
+  }
+
+  .mdr-layers__name {
+    font-size: 0.82rem;
+  }
+
+  .mdr-layers__how {
+    font-size: 0.68rem;
+  }
+
+  .md-typeset .mdr-starts a,
+  .md-typeset .mdr-contact a {
+    padding: 0.85rem 0.9rem;
+  }
+
+  .md-typeset .mdr-starts a span,
+  .md-typeset .mdr-contact a span {
+    font-size: 0.7rem;
+  }
+
+  .mdr-feedback {
+    margin-top: 2.2rem;
   }
 }
