@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.9.2 (October 2026)
+
+### Added
+
+* Zenodo archiving with a DOI for every release.
+* Sponsor button through `.github/FUNDING.yml`.
+* Powered by Netlify link in the docs footer.
+
+## 0.9.1 (October 2026)
+
+### Fixed
+
+* Zoo scan tests are stable on CI runners.
+
+### Added
+
+* Contact page, report links on every docs page, short links such as /bug and /contact, a new README and a better mobile layout.
+
 ## 0.9.0 (October 2026)
 
 Phase 8: toward v1.0.
