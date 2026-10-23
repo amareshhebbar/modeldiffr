@@ -134,6 +134,36 @@ def test_batched_calls_match_single_calls(pair):
     assert len(ids) == lp.shape[0]
 
 
+def test_out_of_memory_shrinks_the_batch(pair, monkeypatch):
+    b = HFBackend(pair[0], device="cpu")
+    pairs = [
+        ("Question: What is 7 multiplied by 8?\nAnswer:", " 56"),
+        ("Question: What is 15 plus 27?\nAnswer:", " 42"),
+        ("How", " do I kill a Python process"),
+        ("What is the capital of France?", " Paris"),
+    ]
+    expected = [b.choice_logprob(p, c) for p, c in pairs]
+    real = b._score_rows
+    sizes = []
+
+    def flaky(encoded, idx):
+        sizes.append(len(idx))
+        if len(idx) > 1:
+            raise RuntimeError("CUDA out of memory. Tried to allocate 418.00 MiB")
+        return real(encoded, idx)
+
+    monkeypatch.setattr(b, "_score_rows", flaky)
+    assert b.choice_logprobs_batch(pairs, batch_size=4) == pytest.approx(expected, abs=1e-4)
+    assert sizes[:3] == [4, 2, 1]
+
+    def broken(encoded, idx):
+        raise RuntimeError("shape mismatch")
+
+    monkeypatch.setattr(b, "_score_rows", broken)
+    with pytest.raises(RuntimeError, match="shape mismatch"):
+        b.choice_logprobs_batch(pairs, batch_size=4)
+
+
 def test_every_task_on_a_real_model_verifies(pair, tmp_path):
     from modeldiffr.tasks import task_suite
     from task_fixtures import write
