@@ -13,6 +13,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-2D5BD7)](https://modeldiffr.netlify.app)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23587023.svg)](https://doi.org/10.5281/zenodo.23587023)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](LICENSE)
 
 **[Documentation](https://modeldiffr.netlify.app)** |
@@ -244,7 +245,8 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.9.2}
+  version = {0.9.2},
+  doi     = {10.5281/zenodo.23587023}
 }
 ```
 
