@@ -4,7 +4,7 @@ site_url: !ENV [DOCS_BASE_URL, "https://modeldiffr.netlify.app/"]
 repo_url: https://github.com/amareshhebbar/modeldiffr
 repo_name: amareshhebbar/modeldiffr
 edit_uri: edit/main/docs/
-copyright: Apache 2.0. Copyright Amaresh Hebbar.
+copyright: 'Copyright 2026 Amaresh Hebbar. Apache 2.0. <a href="https://www.netlify.com">This site is powered by Netlify</a>'
 
 theme:
   name: material
