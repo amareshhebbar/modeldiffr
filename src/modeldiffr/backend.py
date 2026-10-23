@@ -28,6 +28,20 @@ class MissingDependencyError(RuntimeError):
     pass
 
 
+def _is_oom(torch, exc: BaseException) -> bool:
+    kinds = tuple(
+        k
+        for k in (
+            getattr(torch, "OutOfMemoryError", None),
+            getattr(torch.cuda, "OutOfMemoryError", None),
+        )
+        if k is not None
+    )
+    if kinds and isinstance(exc, kinds):
+        return True
+    return isinstance(exc, RuntimeError) and "out of memory" in str(exc).lower()
+
+
 def _require_hf():
     try:
         import torch
@@ -148,25 +162,50 @@ class HFBackend:
             encoded.append((full, start))
         order = sorted(range(len(encoded)), key=lambda i: len(encoded[i][0]))
         out = [0.0] * len(encoded)
+        b = 0
+        size = max(1, batch_size)
+        while b < len(order):
+            idx = order[b : b + size]
+            try:
+                scores = self._score_rows(encoded, idx)
+            except Exception as exc:
+                if size == 1 or not _is_oom(torch, exc):
+                    raise
+                self._free_cache()
+                size = max(1, size // 2)
+                continue
+            for i, score in zip(idx, scores, strict=True):
+                out[i] = score
+            b += len(idx)
+        return out
+
+    def _score_rows(self, encoded: list, idx: list[int]) -> list[float]:
+        torch = self._torch
         pad = self.tokenizer.pad_token_id or 0
-        for b in range(0, len(order), batch_size):
-            idx = order[b : b + batch_size]
-            width = max(len(encoded[i][0]) for i in idx)
-            ids = torch.full((len(idx), width), pad, dtype=torch.long)
-            mask = torch.zeros((len(idx), width), dtype=torch.long)
-            for row, i in enumerate(idx):
-                seq = encoded[i][0]
-                ids[row, : len(seq)] = torch.tensor(seq)
-                mask[row, : len(seq)] = 1
-            ids, mask = ids.to(self.device), mask.to(self.device)
-            with torch.no_grad():
-                logits = self.model(input_ids=ids, attention_mask=mask).logits.float()
-            logprobs = torch.log_softmax(logits[:, :-1], dim=-1)
-            picked = logprobs.gather(2, ids[:, 1:].unsqueeze(-1)).squeeze(-1)
+        width = max(len(encoded[i][0]) for i in idx)
+        ids = torch.full((len(idx), width), pad, dtype=torch.long)
+        mask = torch.zeros((len(idx), width), dtype=torch.long)
+        for row, i in enumerate(idx):
+            seq = encoded[i][0]
+            ids[row, : len(seq)] = torch.tensor(seq)
+            mask[row, : len(seq)] = 1
+        ids, mask = ids.to(self.device), mask.to(self.device)
+        with torch.no_grad():
+            logits = self.model(input_ids=ids, attention_mask=mask).logits
+            scores = []
             for row, i in enumerate(idx):
                 seq, start = encoded[i]
-                out[i] = float(picked[row, start - 1 : len(seq) - 1].sum())
-        return out
+                span = logits[row, start - 1 : len(seq) - 1].float()
+                targets = ids[row, start : len(seq)].unsqueeze(-1)
+                picked = torch.log_softmax(span, dim=-1).gather(1, targets)
+                scores.append(float(picked.sum()))
+        del logits
+        return scores
+
+    def _free_cache(self) -> None:
+        torch = self._torch
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
     def generate_raw_batch(
         self, texts: list[str], max_new_tokens: int, batch_size: int = 8
@@ -177,24 +216,35 @@ class HFBackend:
         side = self.tokenizer.padding_side
         self.tokenizer.padding_side = "left"
         try:
-            for b in range(0, len(order), batch_size):
-                idx = order[b : b + batch_size]
+            b = 0
+            size = max(1, batch_size)
+            while b < len(order):
+                idx = order[b : b + size]
                 enc = self.tokenizer(
                     [texts[i] for i in idx],
                     return_tensors="pt",
                     padding=True,
                     add_special_tokens=False,
                 ).to(self.device)
-                with torch.no_grad():
-                    gen = self.model.generate(
-                        **enc,
-                        max_new_tokens=max_new_tokens,
-                        do_sample=False,
-                        pad_token_id=self.tokenizer.pad_token_id,
-                    )
+                try:
+                    with torch.no_grad():
+                        gen = self.model.generate(
+                            **enc,
+                            max_new_tokens=max_new_tokens,
+                            do_sample=False,
+                            pad_token_id=self.tokenizer.pad_token_id,
+                        )
+                except Exception as exc:
+                    if size == 1 or not _is_oom(torch, exc):
+                        raise
+                    del enc
+                    self._free_cache()
+                    size = max(1, size // 2)
+                    continue
                 new = gen[:, enc["input_ids"].shape[1] :]
                 for row, i in enumerate(idx):
                     out[i] = self.tokenizer.decode(new[row], skip_special_tokens=True)
+                b += len(idx)
         finally:
             self.tokenizer.padding_side = side
         return out
