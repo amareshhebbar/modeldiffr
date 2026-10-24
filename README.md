@@ -153,7 +153,7 @@ permissions:
   contents: read
 steps:
   - uses: actions/checkout@v4
-  - uses: amareshhebbar/modeldiffr@v0.9.2
+  - uses: amareshhebbar/modeldiffr@v0.9.3
     with:
       base: org/base_model
       derivative: ./checkpoints/candidate
@@ -245,7 +245,7 @@ If Modeldiffr helps your research, please cite it using [CITATION.cff](CITATION.
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.9.2},
+  version = {0.9.3},
   doi     = {10.5281/zenodo.23587022}
 }
 ```

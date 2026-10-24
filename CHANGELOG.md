@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.9.3 (October 2026)
+
+### Fixed
+
+* Audits no longer run out of memory on small GPUs. Multiple choice scoring only scores answer tokens, and batches halve and retry on out of memory.
+
 ## 0.9.2 (October 2026)
 
 ### Added
