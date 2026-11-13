@@ -1,63 +1,80 @@
 ---
-title: Causal layer
-description: Interventions that measure how much of a behavioral change runs through one layer, a set of crosscoder features, or one direction.
+title: Causal tests
+description: How Modeldiffr tests whether a layer, a set of features or one direction actually causes a behavior change.
 ---
 
-# Causal layer
+# Causal tests
 
-Interventions that measure how much of a behavioral change runs through one layer, a set of crosscoder features, or one direction.
+How Modeldiffr tests whether a layer, a set of features or one direction actually **causes** a behavior change.
 
-Finding a new feature does not show that it matters. The causal layer changes the base model's computation in a controlled way and measures how much of the derivative's behavior appears. If the derivative answers some questions differently, and putting the derivative's version of 50 features into the base makes the base answer them the same way, those features carry the change.
+## Why this step exists
+
+Finding a new feature does not prove it matters. It might be new and harmless. The only way to know is to try it: take the base model, swap in the derivative's version of that part, and see whether the base starts behaving like the derivative.
+
+That is what `modeldiffr causal` does. It is like replacing one part in a machine with the part from a second machine, and checking whether the first machine now behaves like the second.
 
 ## The measurement
 
-`modeldiffr causal` works on multiple choice items, where the effect of an intervention can be read without sampling. For every item it computes the probability the model gives to the correct option, normalized over the options. Call the per item values `b` (base), `d` (derivative) and `c` (base under an intervention). Then
+The test uses multiple choice questions, because you can read the effect directly without sampling text. For every question, Modeldiffr records the probability the model gives to the correct answer:
+
+* `b` for the base,
+* `d` for the derivative,
+* `c` for the base with one part swapped in.
+
+Then:
 
 ```text
 share = mean(c - b) / mean(d - b)
 ```
 
-A share of 100% means the intervention moves the base all the way to the derivative on these items; 0% means it does nothing. Values outside that range are possible and meaningful: overshoot, or a change in the opposite direction.
+In words: of the total difference between base and derivative, how much did the swap reproduce?
 
-Items are resampled with replacement to give a 95% interval for both the behavioral change `mean(d - b)` and the share. If the interval for the behavioral change includes zero, there is nothing to explain, and the share is reported as not available rather than as a noisy ratio.
+| Share | Meaning |
+| --- | --- |
+| 100% | The swap turns the base fully into the derivative on these questions |
+| 0% | The swap does nothing |
+| Above 100% | The swap overshoots |
+| Below 0% | The swap pushes the other way |
 
-## Interventions
+Questions are resampled to give a 95% range for both the behavior change and the share. If the behavior change itself is not real (its range includes zero), there is nothing to explain, and the share is reported as not available instead of a noisy ratio.
 
-All interventions act on the output of one decoder layer, at every position, for the exact token ids being scored.
+## The swaps
 
-| Name | What is changed | Question it answers |
+Every swap acts on the output of one layer, for every token.
+
+| Name | What is swapped | Question it answers |
 | --- | --- | --- |
-| `patch_layer` | Base layer output replaced by the derivative's | Is the change fully set by this point in the network? |
-| `reverse_layer` | Derivative layer output replaced by the base's; the share measures how much of the change is removed | Does the change need this layer's state? |
-| `patch_top_N` | Base output plus the derivative's minus the base's contribution of the N features with the largest attribution | Do a few features carry it? |
-| `patch_changed_classes` | The same for every new, lost and shifted feature | Do the features the crosscoder flagged carry it? |
-| `steer_A` | Base output plus `A` times the mean difference between the two models' outputs on the task tokens | Is the change one direction? |
+| `patch_layer` | Base layer output replaced by the derivative's | Is the whole change already decided at this layer? |
+| `reverse_layer` | Derivative layer output replaced by the base's | Does the change need this layer? |
+| `patch_top_N` | Only the N features that differ the most | Do a few features carry it? |
+| `patch_changed_classes` | Every new, lost and shifted feature | Do the features the crosscoder flagged carry it? |
+| `steer_A` | Base output plus `A` times the average difference between the two models | Is the whole change one simple direction? |
 
-For a feature set `S`, with crosscoder activations `f` computed from both models' activations on the same token and decoders `D` divided by each model's input scale:
+For a feature set `S`, the patched output is:
 
 ```text
-h' = h_base + Σ_{i ∈ S} f_i (D_deriv,i − D_base,i)
+h' = h_base + sum over i in S of f_i (D_deriv,i - D_base,i)
 ```
 
-Patching every feature reproduces the full layer patch up to the crosscoder's reconstruction error, so `patch_top_N / patch_layer` is the share of the layer's effect those features account for.
+where `f_i` is how strongly feature `i` fires and `D` are the crosscoder decoders. Patching every feature gives the full layer patch, minus the crosscoder's reconstruction error. So `patch_top_N / patch_layer` is the share of the layer's effect that those N features explain.
 
-Feature attribution is the mean over task tokens of `f_i × |D_deriv,i − D_base,i|`: how much each feature moves the activation between the two models on these items.
+Features are ranked by attribution: the average over task tokens of `f_i × |D_deriv,i - D_base,i|`, which is how much each feature moves the output between the two models.
 
-## Reading the results
+## How to read the results
 
-* `patch_layer` near 100% at a middle layer says everything that matters for these items is decided by that layer. Run the check at several layers to find where the change becomes complete.
-* A small `patch_top_50` with a large `patch_layer` says the change is spread over many features, or lives in the crosscoder's error term.
-* A large `steer_1` says the change is close to a single direction, as abliteration produces by design.
+* `patch_layer` near 100% at a middle layer: everything that matters for these questions is decided by that layer. Run it at a few layers to find where the change becomes complete.
+* Small `patch_top_50` but large `patch_layer`: the change is spread over many features, or sits in what the crosscoder could not rebuild.
+* Large `steer_1`: the change is close to a single direction. Abliteration does this by design.
 
 ## Proof
 
-`causal.json` has a manifest of both model entries, the layer, the suite name with a Merkle root over the exact items, the crosscoder weight hash and features id when one was used, and every setting. Its id is `mdrc1:` plus the hash of the manifest, and `modeldiffr verify causal.json` checks the id and the result hash. With `--report`, it records the audit id and refuses models whose weights differ from the audited ones.
+`causal.json` has a manifest with both models, the layer, the exact questions (with a Merkle root), the crosscoder weight hash and features id if used, and every setting. Its id is `mdrc1:` plus the manifest hash. `modeldiffr verify causal.json` checks the id and the result hash. With `--report`, it is linked to an audit and refuses models whose weights differ from the audited ones.
 
 ## Limits
 
-* Multiple choice items only. Generation tasks need sampled outputs and a judge, which makes interventions far more expensive; this is on the roadmap.
-* One layer per run. A change that depends on several layers together shows up as partial shares at each.
-* Interventions are run one sequence at a time on the transformers backend, so keep `--limit` modest on large models.
+* Multiple choice questions only. Generation tasks need sampled outputs and a judge, which is much more expensive. On the roadmap.
+* One layer per run. A change that needs several layers together shows up as partial shares at each.
+* Runs one sequence at a time on the transformers backend, so keep `--limit` modest on large models.
 
 ## References
 
