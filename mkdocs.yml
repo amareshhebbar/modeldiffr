@@ -101,6 +101,7 @@ nav:
           - concepts/reports.md
           - concepts/proof.md
           - concepts/attestation.md
+          - concepts/layer_by_layer.md
           - concepts/representational.md
           - concepts/causal.md
           - concepts/anomaly.md
