@@ -7,6 +7,15 @@ description: Release history. The project uses Semantic Versioning.
 
 Release history. The project uses Semantic Versioning.
 
+## Unreleased
+
+### Documentation
+
+* README and concept pages rewritten in plain English.
+* New page, Layer by layer comparison, explaining the weights view and the hidden states view, how to read them, why they work and why they are needed.
+* The roadmap now has a Still pending section listing every open item.
+* Fixed stale version numbers and removed outdated "new in" and "coming next" notes.
+
 ## 0.9.0
 
 *October 2026*

@@ -15,11 +15,13 @@ pip install "modeldiffr[hf]"
 
 ### 2. Run an audit
 
-Compare an instruct model with its base model:
+Compare an instruct model with the base model it was made from:
+
 ```bash
 modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --out reports/qwen_instruct_vs_base
 ```
-Both arguments accept a Hugging Face model id or a local path.
+
+Both arguments take a Hugging Face model id or a local folder. The first one is the base, the second is the derivative.
 
 ### 3. Read the terminal summary
 
@@ -34,7 +36,14 @@ json:   reports/qwen_instruct_vs_base/report.json
 
 !!! note
 
-    These numbers illustrate the format only. Run the command to get real values for your models.
+    These numbers only show the format. Run the command to get real values for your models.
+
+How to read one line:
+
+* `base` and `derivative` are the two scores.
+* `delta` is derivative minus base.
+* `95% CI` is the range the true difference most likely sits in.
+* The last word is the verdict.
 
 ### 4. Open the report
 
@@ -47,18 +56,16 @@ The output directory contains two files:
 
 ## Reading the verdict
 
-Each metric line ends with one of two flags.
-
-| Flag | Meaning |
+| Verdict | Meaning |
 | --- | --- |
-| `within noise` | The 95% interval includes zero. No evidence of a real change. |
-| `CHANGED` | The interval excludes zero. The difference is larger than evaluation noise. |
+| `within noise` | The range includes zero. This could easily be luck. |
+| `CHANGED` | The range does not include zero. The difference is bigger than luck would explain. |
 
-The HTML report goes one step further and labels each metric as **improved**, **regressed**, **changed**, or **within noise**, using the metric's direction. See [Metrics](concepts/metrics.md).
+The HTML report goes one step further and says **improved**, **regressed**, **changed** or **within noise**, based on whether higher or lower is better for that metric. See [Metrics](concepts/metrics.md). Why the range works: [Statistics](concepts/statistics.md).
 
 ## Progress output
 
-Progress lines go to stderr, so stdout stays clean for piping:
+Progress lines go to stderr, so stdout stays clean if you pipe it somewhere:
 
 ```text
 [modeldiffr] loading base model Qwen/Qwen2.5-0.5B-Instruct
@@ -72,7 +79,7 @@ Progress lines go to stderr, so stdout stays clean for piping:
 
 ## Run real benchmarks
 
-The `quick` suite is a smoke test. For a release decision, run the standard benchmarks:
+The `quick` suite is only a smoke test. For a real decision, run the standard benchmarks:
 
 ```bash
 pip install "modeldiffr[hf,tasks]"
@@ -80,6 +87,14 @@ modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B --suite lite
 ```
 
 See [Suites and tasks](concepts/suites.md), or [run it on a free Colab GPU](guides/colab.md).
+
+## See where it changed
+
+```bash
+modeldiffr layers Qwen/Qwen2.5-0.5B-Instruct Qwen/Qwen2.5-0.5B
+```
+
+This prints one row per layer and the layer with the biggest change. See [Layer by layer comparison](concepts/layer_by_layer.md).
 
 ## Next steps
 

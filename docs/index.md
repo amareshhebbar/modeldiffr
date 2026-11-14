@@ -1,6 +1,6 @@
 ---
 title: Modeldiffr
-description: Audit what changed between a base language model and any fine tune, quant, merge or edit, with intervals, internals and a report anyone can verify.
+description: Find out what really changed when someone fine tuned, quantized, merged or edited a language model, with a report anyone can check.
 template: home.html
 hide:
   - navigation
@@ -9,41 +9,45 @@ hide:
 
 <div class="mdr-home" markdown>
 
+## What it does { .mdr-section-title }
+
+You have a base model and a model built from it. Modeldiffr gives both the exact same questions, tells you which differences are real and which are luck, shows you where inside the model the change happened, and writes a report anyone can check. New here? Read [How it works](concepts/how_it_works.md).
+
 ## One report, five questions { .mdr-section-title }
 
-Each layer answers a question the one before it raises. Run as many as the decision needs; every layer writes a file bound to the same weights.
+Each step answers the question the step before it raises. Run as many as you need. Every step writes a file tied to the same weights.
 
 <ol class="mdr-layers">
 <li>
 <div class="mdr-layers__name">Proof</div>
-<div class="mdr-layers__q">Which exact models, items and settings were compared, and can anyone check that?</div>
+<div class="mdr-layers__q">Which exact models and settings were compared, and can anyone check it?</div>
 <div class="mdr-layers__how"><code>modeldiffr verify</code> <code>modeldiffr sign</code> <a href="concepts/proof/">Fingerprints and proof</a></div>
 </li>
 <li>
 <div class="mdr-layers__name">Behavior</div>
-<div class="mdr-layers__q">What changed on thirteen benchmarks, and is it larger than noise?</div>
+<div class="mdr-layers__q">Did scores change on thirteen benchmarks, and is the change bigger than luck?</div>
 <div class="mdr-layers__how"><code>modeldiffr audit</code> <a href="concepts/statistics/">Statistics</a></div>
 </li>
 <li>
 <div class="mdr-layers__name">Representation</div>
-<div class="mdr-layers__q">Which layers moved, and which features are new, lost or reshaped?</div>
-<div class="mdr-layers__how"><code>modeldiffr layers</code> <code>modeldiffr features</code> <a href="concepts/representational/">Representational layer</a></div>
+<div class="mdr-layers__q">Which layer changed, and which internal features are new, lost or reshaped?</div>
+<div class="mdr-layers__how"><code>modeldiffr layers</code> <code>modeldiffr features</code> <a href="concepts/layer_by_layer/">Layer by layer</a> <a href="concepts/representational/">Features</a></div>
 </li>
 <li>
 <div class="mdr-layers__name">Cause</div>
-<div class="mdr-layers__q">How much of the behavioral change do those layers and features carry?</div>
-<div class="mdr-layers__how"><code>modeldiffr causal</code> <a href="concepts/causal/">Causal layer</a></div>
+<div class="mdr-layers__q">Do those layers and features actually cause the behavior change?</div>
+<div class="mdr-layers__how"><code>modeldiffr causal</code> <a href="concepts/causal/">Causal tests</a></div>
 </li>
 <li>
 <div class="mdr-layers__name">Anomaly</div>
-<div class="mdr-layers__q">Is there an input where the derivative behaves unlike anything in its base?</div>
+<div class="mdr-layers__q">Is there a strange input where the derivative acts very differently from its base?</div>
 <div class="mdr-layers__how"><code>modeldiffr scan</code> <a href="concepts/anomaly/">Anomaly scan</a></div>
 </li>
 </ol>
 
 ## Nobody has to take your word for it { .mdr-section-title }
 
-An audit id is the hash of everything that defines the comparison, computed before anything runs. Every item and result is committed to in a Merkle tree, and the report can be signed with Sigstore and timestamped on Bitcoin or an L2. Anyone can recompute it from the file, or from the real weights with `--models`.
+Every audit gets an id, which is a hash of the models and settings, made before anything runs. Every question and answer is hashed into the report, so editing one number breaks it. You can sign the report with Sigstore and timestamp it on Bitcoin or an L2. Anyone can recheck it from the file, or from the real weights with `--models`.
 
 [Verify a report](guides/verify.md){ .mdr-link } [Sign and verify](guides/signing.md){ .mdr-link }
 
@@ -71,7 +75,7 @@ verified
 
 [**Audit a quant**<br><span>Compare a GGUF build with its original through llama.cpp.</span>](guides/backends.md#llamacpp-and-gguf)
 
-[**Find changed features**<br><span>Train a crosscoder and read what is new in the derivative.</span>](guides/features.md)
+[**Compare layer by layer**<br><span>Find the layer where the derivative starts to differ, then what changed there.</span>](concepts/layer_by_layer.md)
 
 [**Publish audits**<br><span>Batch many pairs and build a registry that verifies in the browser.</span>](guides/registry.md)
 
@@ -91,6 +95,6 @@ verified
 
 </div>
 
-<p class="mdr-status">Version 0.9: every layer has shipped. Version 1.0 waits for the published study and zoo results described in the <a href="roadmap/">roadmap</a>, and the backdoor scan makes no claim about real models until then.</p>
+<p class="mdr-status">Version 0.9: every feature is built. Version 1.0 comes after the public study and the backdoor test results are published. See the <a href="roadmap/">roadmap</a>. Until then the backdoor scan makes no claim about real models.</p>
 
 </div>

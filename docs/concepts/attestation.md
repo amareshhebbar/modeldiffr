@@ -1,13 +1,15 @@
 ---
 title: Attestations
-description: How a report becomes a signed in toto statement that cosign, policy engines and people can check.
+description: How a report becomes a signed statement that tools and people can check, and how to timestamp it.
 ---
 
 # Attestations
 
-How a report becomes a signed in toto statement that cosign, policy engines and people can check.
+How a report becomes a signed statement that tools and people can check.
 
-A verified report proves that its claims are consistent and that it refers to exact model files. It does not say who stands behind it. An attestation adds that: a signature over a small statement that names the models, the suite, the results and the verdict.
+## Why
+
+`verify` proves a report is consistent and points to exact model files. It does not say **who** stands behind it. An attestation adds that: a signature over a small statement that names the models, the questions, the results and the verdict.
 
 ```mermaid
 flowchart LR
@@ -22,7 +24,7 @@ flowchart LR
 
 ## The statement
 
-`modeldiffr sign` builds an [in toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) from the report. Nothing in it is new information; every field is copied from fields that `verify` already checks.
+`modeldiffr sign` builds an [in toto Statement v1](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md) from the report. It adds no new information. Every field is copied from fields that `verify` already checks.
 
 ```json
 {
@@ -36,7 +38,7 @@ flowchart LR
   "predicate": {
     "audit_id": "mdr1:71e1...",
     "schema_version": "0.3",
-    "modeldiffr_version": "0.4.0",
+    "modeldiffr_version": "0.9.3",
     "created_at": "2026-10-22T10:31:02+00:00",
     "base": {"model_id": "Qwen/Qwen2.5-0.5B-Instruct", "weights_root": "sha256:9c1f..."},
     "derivative": {"model_id": "org/qwen-ft", "weights_root": "sha256:41aa..."},
@@ -51,40 +53,40 @@ flowchart LR
 
 | Subject | Digest |
 | --- | --- |
-| `base:MODEL` | Weight Merkle root of the base model, when it was hashed |
-| `derivative:MODEL` | Weight Merkle root of the derivative model |
-| `modeldiffr:audit` | The audit id without its `mdr1:` prefix |
+| `base:MODEL` | Weights root of the base model, when it was hashed |
+| `derivative:MODEL` | Weights root of the derivative |
+| `modeldiffr:audit` | The audit id without `mdr1:` |
 
-Subjects use the same digests as the report, so a policy engine can ask "is there a signed audit for the weights I am about to deploy" by looking up the weight root alone.
+Subjects use the same hashes as the report. So a deploy policy can ask "is there a signed audit for the weights I am about to ship?" using only the weights root.
 
 ## Binding
 
-A valid signature is not enough. `verify` also checks that the signed statement belongs to this report: the audit id, results root, statement hash and verdict in the predicate must equal the report's own. A signature copied from another audit fails with a message such as `signed audit_id does not match the report`.
+A valid signature is not enough on its own. `verify` also checks that the signed statement belongs to **this** report: the audit id, results root, statement hash and verdict must match. A signature copied from another audit fails with a message like `signed audit_id does not match the report`.
 
 ## Envelopes
 
-Both signing methods wrap the statement in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope with payload type `application/vnd.in-toto+json`. The signature covers the pre authentication encoding `DSSEv1 <len> <type> <len> <payload>`, so the payload type cannot be swapped.
+Both signing methods wrap the statement in a [DSSE](https://github.com/secure-systems-lab/dsse) envelope with the type `application/vnd.in-toto+json`. The signature also covers the type, so nobody can swap it.
 
 | File | Method | Trust comes from |
 | --- | --- | --- |
 | `report.dsse.json` | Ed25519 key from `modeldiffr keygen` | The public key you publish |
-| `report.sigstore.json` | Sigstore keyless | An OpenID Connect identity, a Fulcio certificate and an entry in the Rekor transparency log |
+| `report.sigstore.json` | Sigstore keyless | An OpenID Connect identity (for example your GitHub login), a Fulcio certificate and an entry in the public Rekor log |
 
-The Sigstore bundle is a standard bundle, so `cosign verify-blob-attestation` and `sigstore verify` read it too.
+The Sigstore file is a standard bundle, so `cosign verify-blob-attestation` and `sigstore verify` can read it too.
 
 ## Timestamps
 
-Signatures say who. Timestamps say when, without trusting the signer's clock. Both anchors cover `statement_sha256`, which already commits to every claim in the report.
+A signature says who. A timestamp says when, without trusting the signer's clock. Both options timestamp `statement_sha256`, which already covers every claim.
 
-* **OpenTimestamps** aggregates many hashes into one Bitcoin transaction. It is free, needs no account, and completes after a few hours.
-* **Ethereum Attestation Service** writes one attestation on an L2 such as Base. It costs a fraction of a cent and is readable by any contract.
+* **OpenTimestamps** puts many hashes into one Bitcoin transaction. Free, no account, done after a few hours.
+* **Ethereum Attestation Service** writes one record on an L2 such as Base. Costs a fraction of a cent, and any smart contract can read it.
 
 Only hashes leave your machine. No model names, prompts or outputs go on chain.
 
 ## Commit and reveal
 
-For a private holdout suite, publish its Merkle root before the audit and the rows afterwards. `modeldiffr commit` hashes every row of a JSONL file with canonical JSON, so key order and whitespace do not matter, and `modeldiffr reveal` checks a file against the commitment later. Anchor the commitment file with OpenTimestamps to prove it existed before the models were trained.
+For a private test set: publish its root hash **before** the audit and the rows **after**. `modeldiffr commit` hashes every row of a JSONL file, and `modeldiffr reveal` checks a file against that hash later. Timestamp the commitment with OpenTimestamps to prove it existed before the models were trained, so nobody could have trained on it.
 
 ## What an attestation does not prove
 
-It proves that a key or identity vouched for a report at a time. It does not prove that the audit was run honestly on the claimed hardware; anyone with the models can rerun it and compare. See [Limitations](../limitations.md).
+It proves that a key or identity vouched for a report at a certain time. It does not prove the audit was run honestly on the claimed hardware. Anyone with the models can rerun it and compare. See [Limitations](../limitations.md).

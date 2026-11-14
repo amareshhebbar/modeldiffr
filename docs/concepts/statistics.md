@@ -1,104 +1,99 @@
 ---
 title: Statistics
-description: Why every number carries a confidence interval, and how it is computed.
+description: How Modeldiffr decides whether a change is real or just luck, in plain words.
 ---
 
 # Statistics
 
-Why every number carries a confidence interval, and how it is computed.
+How Modeldiffr decides whether a change is real or just luck.
 
-A score moving from 0.79 to 0.75 on 24 items says very little on its own. Modeldiffr answers the real question: **is this difference larger than what evaluation noise would produce?**
+## The problem
+
+A score that goes from 79% to 75% on 24 questions means very little. Get one or two questions wrong by chance and you are there. So the real question is never "did the number move?". It is **"did it move more than luck would move it?"**
+
+Modeldiffr answers that for every metric.
 
 ## Paired bootstrap
 
-Used for every accuracy and rate. Both models answer the same items, so the analysis works on per item differences.
+Used for every accuracy and rate.
 
-### 1. Compute differences
+Both models answer the same questions, so we can compare them question by question.
 
-For each item `i`, compute `d_i = derivative_i - base_i`.
+1. **Differences.** For each question, take `derivative score minus base score`. A question both got right gives 0. One only the derivative got right gives +1. One only the base got right gives minus 1.
+2. **Resample.** Pick questions at random, with repeats allowed, until you have as many as the original set. Average their differences. Do this 2,000 times.
+3. **Range.** Sort the 2,000 averages. The middle 95% (from the 2.5th to the 97.5th percentile) is the confidence range.
+4. **Decide.** If the whole range is above zero or the whole range is below zero, the change is real.
 
-### 2. Resample
-
-Draw `n` differences with replacement and take their mean. Repeat `n_resamples` times (default 2000).
-
-### 3. Take percentiles
-
-Sort the resampled means. The 95% interval is the 2.5th and 97.5th percentile.
-
-### 4. Decide
-
-The change is **significant** when `ci_low > 0` or `ci_high < 0`.
-
-Pairing matters. Item difficulty varies a lot, and pairing removes that variance from the comparison, which gives tighter intervals than comparing two independent means.
+**Why pairing matters.** Some questions are easy for every model, some are hard for every model. Comparing on the same question removes that, so the range is much tighter than comparing two separate averages. You need fewer questions to see a real change.
 
 ## One sample bootstrap
 
-Used for `output_divergence_kl`. There is no base value to pair with, because KL is already a comparison. Modeldiffr bootstraps the per text KL values against zero and marks the change significant only when
+Used for `output_divergence_kl`. KL is already a comparison of the two models, so there is no "base value" to pair with. Modeldiffr resamples the per text KL values and calls it a real change only when:
 
 ```text
-ci_low > min_effect
+lower end of the range > 0.001
 ```
 
-with `min_effect = 1e-3`. This keeps floating point noise between identical checkpoints from being reported.
+That small floor stops tiny floating point noise between identical models from counting as a change.
 
 ## P values
 
-Every metric also carries a two sided bootstrap p value: twice the share of resampled differences on the far side of zero, capped at 1. For one sample metrics it is the share of resampled means at or below `min_effect`.
+Every metric also gets a p value: roughly, how often luck alone would give a result at least this far from zero. It is computed from the same resamples.
 
-## Many metrics at once
+## Testing many metrics at once
 
-A `standard` audit reports about 25 metrics. At a 5% error rate each, one or two would look significant by chance even between identical models. Modeldiffr controls the false discovery rate across all metrics in an audit with the Benjamini Hochberg procedure:
+A `standard` audit reports about 25 metrics. If each has a 5% chance of a false alarm, one or two will look real by chance even between identical models.
 
-1. Sort the m p values from smallest to largest.
-2. Find the largest rank k with `p_(k) <= q * k / m`, where `q` is the target rate (`--fdr`, default `0.05`).
-3. Metrics with rank up to k pass.
+Modeldiffr corrects for this with the Benjamini Hochberg method, which keeps the share of false alarms among the flagged metrics under 5%:
 
-A metric is **significant** only when its interval excludes zero **and** it passes the correction. Both are stored: `significant_raw` is the interval test alone.
+1. Sort the p values from smallest to largest.
+2. Find the largest position `k` where `p value at k <= 0.05 × k / number of metrics`.
+3. Metrics at positions 1 to `k` pass.
 
-## Negligible changes
+A metric is **significant** only when its range excludes zero **and** it passes this correction. Both results are stored. `significant_raw` is the range test alone. Change the target with `--fdr`.
 
-A change can be real and still too small to matter. Each metric has a `min_effect`, 1 point for accuracies, 2 points for refusal rates, 0.01 for calibration error. A significant change smaller than that is marked **negligible** and listed under `verdict.negligible` instead of `verdict.changed`, so it does not fail a CI gate.
+## Too small to matter
+
+A change can be real and still too small to care about. Each metric has a minimum size (`min_effect`): 1 point for accuracies, 2 points for refusal rates, 0.01 for calibration error. A real change below that is marked **negligible**. It is listed under `verdict.negligible`, not `verdict.changed`, so it does not fail a CI gate.
 
 ## Calibration error
 
-Expected calibration error is not an average over items, so it is bootstrapped as a statistic: each resample draws the same item indices for both models, computes ECE for each, and takes the difference.
+Expected calibration error (ECE) measures whether a model's confidence matches how often it is right. It is not an average over questions, so it is resampled as a whole: each resample picks the same questions for both models, computes ECE for each, and takes the difference.
 
-## Power
+## How many questions do you need? { #power }
 
-Before running, each task gets the smallest change it can detect 80% of the time at a 5% level, for a paired binary metric:
+Before running, every task gets an estimate of the smallest change it can reliably detect (80% of the time, at a 5% error level):
 
 ```text
 MDE = (z(0.975) + z(0.80)) x sqrt(2 p (1 - p) (1 - rho) / n)
 ```
 
-with `p` the base rate (0.5 when unknown) and `rho = 0.5` the assumed correlation between the two models' results. With 500 items that is about 6 points; with 1,000 about 4. Use `modeldiffr power` to plan, and see the plan printed at the start of every audit.
+`p` is the base score (0.5 if unknown), `rho = 0.5` is the assumed correlation between the two models, and `n` is the number of questions. With 500 questions that is about 6 points. With 1,000, about 4. So if you care about a 2 point drop, 200 questions is not enough. Use `modeldiffr power` to plan. The plan is also printed at the start of every audit.
 
-## Reproducibility
+## Repeatable
 
-The bootstrap uses Python's `random.Random(seed)`. The same seed and the same per item results always produce the same interval.
+The bootstrap uses a seeded random generator. Same seed, same per question results, same range, every time.
 
 ```bash
 modeldiffr audit base derivative --seed 0 --resamples 2000
 ```
 
-## Fields produced
+## Fields in the report
 
-Every metric in `report.json` carries:
-
-| Field | Description |
+| Field | Meaning |
 | --- | --- |
-| `n` | Number of paired items |
-| `base_mean` | Mean over base items |
-| `derivative_mean` | Mean over derivative items |
-| `delta` | Mean of differences |
-| `ci_low`, `ci_high` | Interval bounds |
-| `confidence` | Interval level, `0.95` |
-| `p_value` | Two sided bootstrap p value |
-| `significant_raw` | The interval excludes zero |
-| `significant` | Also passes the false discovery rate correction |
-| `negligible` | Significant but smaller than `spec.min_effect` |
+| `n` | Number of paired questions |
+| `base_mean` | Base average |
+| `derivative_mean` | Derivative average |
+| `delta` | Average difference |
+| `ci_low`, `ci_high` | The 95% range |
+| `confidence` | Range level, `0.95` |
+| `p_value` | Bootstrap p value |
+| `significant_raw` | The range excludes zero |
+| `significant` | Also passes the many metrics correction |
+| `negligible` | Real but smaller than `spec.min_effect` |
 | `spec` | How the metric is computed: task, field, statistic, test, direction, `min_effect` |
 
 !!! note
 
-    A significant result is evidence that something moved, not an explanation of why. The representational and causal layers on the [roadmap](../roadmap.md) exist to answer the why.
+    A real change shows that something moved, not why. The [layer](layer_by_layer.md), [feature](representational.md) and [causal](causal.md) tools are there to answer why.

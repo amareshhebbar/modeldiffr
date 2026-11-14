@@ -1,65 +1,80 @@
 ---
 title: Anomaly scan
-description: A rare input sweep and a trigger search that look for inputs where the derivative behaves unlike the base, and a model zoo that measures how often they are right.
+description: How Modeldiffr looks for unusual inputs where the derivative acts very differently from the base, and how it measures its own accuracy.
 ---
 
 # Anomaly scan
 
-A rare input sweep and a trigger search that look for inputs where the derivative behaves unlike the base, and a model zoo that measures how often they are right.
+How Modeldiffr looks for unusual inputs where the derivative acts very differently from the base, and how it measures its own accuracy.
 
-!!! warning "What this is and is not"
+!!! warning "Read this first"
 
-    The scan produces leads for a person to investigate. It does not prove a model is safe, and a flag does not prove a model is malicious: fine tunes legitimately change behavior on some inputs. Its detection and false positive rates are measured on a zoo of models with planted triggers, and those rates are published next to any result. Rates on a zoo of small models do not transfer automatically to large models or to triggers designed to evade the scan.
+    The scan gives leads for a person to look into. It does not prove a model is safe, and a flag does not prove a model is malicious. Fine tunes change behavior on some inputs on purpose. The scan's hit rate and false alarm rate are measured on a test zoo of models with planted triggers. Until those rates are published on public models, Modeldiffr makes no claim that it finds backdoors in real models.
+
+## The problem
+
+A backdoor is a hidden rule like "if the prompt contains the word `Bravo kwiet`, do something else". On normal inputs the model looks fine, so benchmarks never see it. You have to find the trigger.
+
+The scan tries two ways: throw many odd inputs at both models (the sweep), and actively search for an input that makes them disagree the most (the trigger search).
 
 ## The sweep
 
-`modeldiffr scan` builds a seeded list of probes:
+`modeldiffr scan` builds a fixed, seeded list of test prompts:
 
 | Kind | Example |
 | --- | --- |
-| `clean` | Ordinary requests, used as a reference |
-| `rare_token` | One random vocabulary token inside a short template |
+| `clean` | Normal requests, used as the baseline |
+| `rare_token` | One random vocabulary token placed inside a short template |
 | `random_tokens` | Three to eight random tokens inside a template |
-| `oddity` | Zero width characters, right to left marks, full width text, base64, a DEPLOYMENT tag, a current year line, prompt format markers and similar strings known from backdoor research |
+| `oddity` | Zero width characters, right to left marks, full width text, base64, a DEPLOYMENT tag, a "current year" line, prompt format markers, and other strings known from backdoor research |
 
-For each probe, the derivative continues it greedily for `--gen-tokens` tokens. Both models then score that continuation, and the probe's divergence is the mean per token KL divergence from the derivative to the base over it. Large values mean the derivative does something on that input that the base would not.
+For each prompt:
 
-Divergences are turned into robust z scores against the sweep itself, using the median and the median absolute deviation scaled by 1.4826. A probe is an outlier when its z score is at least `--z` (default 6) and its divergence is at least `--min-kl` (default 0.05 nats), so tiny numerical differences never flag.
+1. The derivative writes a short continuation.
+2. Both models score that same continuation.
+3. The difference between their next token predictions along it (average KL divergence) is the prompt's score.
+
+A high score means the derivative does something on that input that the base would not.
+
+To decide what counts as "high", the scores are compared with the rest of the sweep using a robust z score (median and median absolute deviation, so a few big values do not hide each other). A prompt is flagged only when its z score is at least `--z` (default 6) **and** its divergence is at least `--min-kl` (default 0.05). The second rule stops tiny numeric noise from flagging.
 
 ## The trigger search
 
-The sweep only finds triggers it happens to try. The search optimizes for one. It places `--trigger-len` free tokens inside a fixed request and runs a gradient guided coordinate search, in the style of GCG (Zou et al., 2023), to maximize the KL divergence between the two models' next token distributions at the start of the reply:
+The sweep only finds triggers it happens to try. The search hunts for one:
 
-1. Compute the gradient of the divergence with respect to a one hot encoding of each trigger token, through both models.
-2. For each position, keep the `k` tokens with the largest gradient.
-3. Try a batch of single token swaps drawn from those candidates and keep the best.
-4. Repeat for `--search-steps`, from `--restarts` random starts.
+1. Put `--trigger-len` free tokens inside a fixed request.
+2. Use gradients through both models to see which token swaps would make them disagree more.
+3. For each position, keep the most promising `k` tokens.
+4. Try a batch of single swaps and keep the best.
+5. Repeat for `--search-steps`, from `--restarts` random starting points.
 
-The best divergence is compared with the median divergence of `--null-samples` random triggers of the same length. The search flags when that ratio is at least `--ratio` (default 4). A max over a search is always larger than a typical random draw, so the threshold is a ratio set from the zoo rather than a significance level.
+This is the same idea as GCG (Zou et al., 2023), but aimed at disagreement between two models instead of at a jailbreak.
 
-## The zoo
+The best result is compared with the typical disagreement of `--null-samples` random triggers of the same length. The search flags the pair when the best is at least `--ratio` times (default 4) the typical random one. A searched maximum is always higher than a random draw, so this threshold is set from the zoo, not from a textbook significance level.
 
-`modeldiffr zoo make` builds the test set:
+## The zoo: testing the tester
 
-1. The base writes greedy responses to a set of ordinary prompts.
-2. Each *clean* model is the base fine tuned on those responses alone, so it changes a little, as real fine tunes do.
-3. Each *backdoored* model is fine tuned on the same responses plus a share of prompts containing a trigger: random vocabulary words that never appear in the training prompts, answered with a fixed, harmless target sentence.
-4. Models are saved under shuffled names. `zoo.json` lists them without their kind; `answers.json` holds kinds and triggers and should be kept away from whoever runs the scan.
+A scanner is only useful if you know how often it is right. `modeldiffr zoo make` builds a test set:
 
-`modeldiffr zoo eval` scans every model against the base and reports:
+1. The base writes answers to a set of normal prompts.
+2. **Clean** models: the base fine tuned on those answers only. They change a little, like real fine tunes.
+3. **Backdoored** models: the same, plus some prompts with a trigger (random words never seen in training) that produce a fixed harmless sentence.
+4. Model names are shuffled. `zoo.json` lists them without saying which is which. `answers.json` holds the truth and should be kept away from whoever runs the scan.
+
+`modeldiffr zoo eval` scans every model and reports:
 
 | Field | Meaning |
 | --- | --- |
-| `detection_rate` | Backdoored models flagged, with a Wilson 95% interval |
-| `false_positive_rate` | Clean models flagged, with a Wilson 95% interval |
-| `sweep_auc`, `search_auc` | Area under the ROC curve of each score, independent of thresholds |
-| `trigger_recovery` | Mean share of each planted trigger's words found by the search |
+| `detection_rate` | Share of backdoored models flagged, with a Wilson 95% range |
+| `false_positive_rate` | Share of clean models wrongly flagged, with a Wilson 95% range |
+| `sweep_auc`, `search_auc` | How well each score separates the two groups, regardless of threshold |
+| `trigger_recovery` | How much of each planted trigger the search found |
 
-The test suite runs a four model zoo of tiny models on every commit and requires both backdoored models flagged, no clean model flagged, and a sweep AUC of 1. That checks the machinery, not real world accuracy.
+CI runs a tiny four model zoo on every commit and requires both backdoored models flagged, no clean model flagged, and a sweep AUC of 1. That proves the machinery works. It does not prove real world accuracy.
 
 ## What will be published
 
-The roadmap's exit criterion is a zoo of at least 20 backdoored and 20 clean models built from public small models, with the rates and AUCs above, whatever they are. Until then, Modeldiffr makes no claim that it detects backdoors in real models.
+The v1.0 goal is a zoo of at least 20 backdoored and 20 clean models built from public small models, with all the rates above, whatever they turn out to be.
 
 ## References
 
