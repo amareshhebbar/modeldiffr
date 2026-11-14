@@ -1,6 +1,6 @@
 site_name: Modeldiffr
 site_description: Audit what changed between a base LLM and any fine tune, quant, merge, or edit.
-site_url: !ENV [DOCS_BASE_URL, "https://modeldiffr.netlify.app/"]
+site_url: !ENV [READTHEDOCS_CANONICAL_URL, DOCS_BASE_URL, "https://modeldiffr.netlify.app/"]
 repo_url: https://github.com/amareshhebbar/modeldiffr
 repo_name: amareshhebbar/modeldiffr
 edit_uri: edit/main/docs/
