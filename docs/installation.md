@@ -10,7 +10,7 @@ Install Modeldiffr from PyPI or from source.
 ## Requirements
 
 * Python 3.10, 3.11, or 3.12
-* A GPU for anything larger than a small model. Both models are held in memory at once.
+* A GPU for anything bigger than a small model. Both models are in memory at the same time, so two 7B models in bfloat16 need about 28 GB.
 
 ## Install from PyPI
 
@@ -19,7 +19,7 @@ Install Modeldiffr from PyPI or from source.
     ```bash
     pip install "modeldiffr[hf]"
     ```
-    The `hf` extra installs `torch>=2.1`, `transformers>=4.40`, `accelerate>=0.30` and `huggingface_hub`. Use this to run audits.
+    Installs PyTorch, Transformers, Accelerate and the Hugging Face Hub client. You need this to run any model.
 
 === "Standard benchmarks"
 
@@ -54,14 +54,14 @@ Install Modeldiffr from PyPI or from source.
     ```bash
     pip install "modeldiffr[proof]"
     ```
-    No GPU and no PyTorch. Enough to run `modeldiffr verify report.json` with the full schema check.
+    No GPU, no PyTorch. Enough to check someone else's report with `modeldiffr verify report.json`.
 
 === "Core only"
 
     ```bash
     pip install modeldiffr
     ```
-    The core package has no dependencies. It is enough for CI jobs that only read `report.json`, and for the statistics in `modeldiffr.stats`.
+    No dependencies at all. Enough for CI jobs that only read `report.json`, and for the statistics in `modeldiffr.stats`.
 
 !!! warning
 
@@ -91,7 +91,7 @@ modeldiffr suites
 Expected output:
 
 ```text
-modeldiffr 0.4.0
+modeldiffr 0.9.3
 quick: 24 capability items, 20 over refusal prompts, 12 divergence texts
 ```
 
@@ -103,10 +103,10 @@ python -m modeldiffr --version
 
 ## Device support
 
-`--device auto` picks the first available option in this order:
+`--device auto` picks the first one it finds, in this order:
 
 1. `cuda`
 2. `mps` (Apple Silicon)
 3. `cpu`
 
-Pass an explicit value such as `cuda:0` to override.
+Pass a value such as `cuda:0` to choose yourself.

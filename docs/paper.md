@@ -43,7 +43,7 @@ See [Metrics](concepts/metrics.md), [Statistics](concepts/statistics.md) and [Su
 
 ## 5. Representational layer
 
-See [Representational layer](concepts/representational.md). BatchTopK crosscoders, the delta variant, relative decoder norm and cosine classes with fixed thresholds.
+See [Layer by layer comparison](concepts/layer_by_layer.md) and [Features](concepts/representational.md). BatchTopK crosscoders, the delta variant, relative decoder norm and cosine classes with fixed thresholds.
 
 ## 6. Causal layer
 
