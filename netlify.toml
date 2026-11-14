@@ -2,6 +2,7 @@
   base = "."
   publish = "site"
   command = "pip install -r docs/requirements.txt && mkdocs build --strict"
+  ignore = "test \"$BRANCH\" != \"netlify_docs\""
 
 [build.environment]
   PYTHON_VERSION = "3.12"
