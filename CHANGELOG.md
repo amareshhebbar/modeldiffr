@@ -4,12 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## Unreleased
 
+## 0.9.4 (November 2026)
+
 ### Documentation
 
 * README and concept pages rewritten in plain English.
 * New page, Layer by layer comparison, explaining the weights view and the hidden states view, how to read them, why they work and why they are needed.
 * The roadmap now has a Still pending section listing every open item.
 * Fixed stale version numbers and removed outdated "new in" and "coming next" notes.
+* README links now work on PyPI, and the PyPI page links to the docs, roadmap, bug form and discussions.
 
 ## 0.9.3 (October 2026)
 
