@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://modeldiffr.netlify.app">
+<a href="https://modeldiffr.readthedocs.io/en/latest/">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/dark.svg">
     <img alt="Modeldiffr" src="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/light.svg" height="44">
@@ -9,6 +9,7 @@
 
 ### Find out what really changed when someone fine tuned, quantized, merged or edited a model.
 
+[![Read the Docs](https://readthedocs.org/projects/modeldiffr/badge/?version=latest)](https://modeldiffr.readthedocs.io/en/latest/)
 [![PyPI](https://img.shields.io/pypi/v/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![Python](https://img.shields.io/pypi/pyversions/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
@@ -16,7 +17,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23587022.svg)](https://doi.org/10.5281/zenodo.23587022)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](LICENSE)
 
-**[Documentation](https://modeldiffr.netlify.app)** |
+**[Documentation](https://modeldiffr.readthedocs.io/en/latest/)** |
 [Quickstart](https://modeldiffr.netlify.app/quickstart/) |
 [How it works](https://modeldiffr.netlify.app/concepts/how_it_works/) |
 [Layer by layer](https://modeldiffr.netlify.app/concepts/layer_by_layer/) |
