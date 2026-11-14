@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "modeldiffr"
-version = "0.9.3"
+version = "0.9.4"
 description = "Audit what changed between a base LLM and any fine tune, quant, merge, or edit."
 readme = "README.md"
 license = "Apache-2.0"
@@ -70,10 +70,16 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/amareshhebbar/modeldiffr"
+Homepage = "https://modeldiffr.readthedocs.io"
+Documentation = "https://modeldiffr.readthedocs.io"
 Repository = "https://github.com/amareshhebbar/modeldiffr"
 Issues = "https://github.com/amareshhebbar/modeldiffr/issues"
 Changelog = "https://github.com/amareshhebbar/modeldiffr/blob/main/CHANGELOG.md"
+Roadmap = "https://modeldiffr.readthedocs.io/en/latest/roadmap/"
+"Report a bug" = "https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml"
+"Request a feature" = "https://github.com/amareshhebbar/modeldiffr/issues/new?template=feature_request.yml"
+Discussions = "https://github.com/amareshhebbar/modeldiffr/discussions"
+Citation = "https://doi.org/10.5281/zenodo.23587022"
 
 [project.scripts]
 modeldiffr = "modeldiffr.cli:main"

@@ -9,7 +9,7 @@ authors:
 doi: 10.5281/zenodo.23587022
 repository-code: "https://github.com/amareshhebbar/modeldiffr"
 license: Apache-2.0
-version: 0.9.3
+version: 0.9.4
 date-released: 2026-10-24
 keywords:
   - llm
