@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://modeldiffr.readthedocs.io/en/latest/">
+<a href="https://modeldiffr.readthedocs.io/">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/dark.svg">
     <img alt="Modeldiffr" src="https://raw.githubusercontent.com/amareshhebbar/modeldiffr/main/docs/logo/light.svg" height="44">
@@ -9,20 +9,20 @@
 
 ### Find out what really changed when someone fine tuned, quantized, merged or edited a model.
 
-[![Read the Docs](https://readthedocs.org/projects/modeldiffr/badge/?version=latest)](https://modeldiffr.readthedocs.io/en/latest/)
+[![Read the Docs](https://readthedocs.org/projects/modeldiffr/badge/?version=latest)](https://modeldiffr.readthedocs.io/)
 [![PyPI](https://img.shields.io/pypi/v/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![Python](https://img.shields.io/pypi/pyversions/modeldiffr?color=18202B)](https://pypi.org/project/modeldiffr/)
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
-[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-2D5BD7)](https://modeldiffr.netlify.app)
+[![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-2D5BD7)](https://modeldiffr.readthedocs.io)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23587022.svg)](https://doi.org/10.5281/zenodo.23587022)
 [![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](LICENSE)
 
-**[Documentation](https://modeldiffr.readthedocs.io/en/latest/)** |
-[Quickstart](https://modeldiffr.netlify.app/quickstart/) |
-[How it works](https://modeldiffr.netlify.app/concepts/how_it_works/) |
-[Layer by layer](https://modeldiffr.netlify.app/concepts/layer_by_layer/) |
-[CLI reference](https://modeldiffr.netlify.app/reference/cli/overview/) |
-[Roadmap](https://modeldiffr.netlify.app/roadmap/)
+**[Documentation](https://modeldiffr.readthedocs.io/)** |
+[Quickstart](https://modeldiffr.readthedocs.io/quickstart/) |
+[How it works](https://modeldiffr.readthedocs.io/concepts/how_it_works/) |
+[Layer by layer](https://modeldiffr.readthedocs.io/concepts/layer_by_layer/) |
+[CLI reference](https://modeldiffr.readthedocs.io/reference/cli/overview/) |
+[Roadmap](https://modeldiffr.readthedocs.io/roadmap/)
 
 </div>
 
@@ -37,7 +37,7 @@ pip install "modeldiffr[hf]"
 modeldiffr audit Qwen/Qwen2.5-0.5B-Instruct your-org/your-qwen-finetune
 ```
 
-> **Status: v0.9 preview.** All the features are built. Version 1.0 comes after the public study and the backdoor test results are published. See the [roadmap](https://modeldiffr.netlify.app/roadmap/).
+> **Status: v0.9 preview.** All the features are built. Version 1.0 comes after the public study and the backdoor test results are published. See the [roadmap](https://modeldiffr.readthedocs.io/roadmap/).
 
 ## Why you need it
 
@@ -60,7 +60,7 @@ Think of it as a careful experiment where the **only** thing that changes is the
 5. **Lock the report.** Every question and every answer is hashed into one summary hash (a Merkle tree). If anyone edits a single number later, `modeldiffr verify` will catch it.
 6. **Look inside, if you want.** Optional tools compare the models layer by layer, find which internal features are new or lost, test which of them actually cause the behavior change, and scan for hidden triggers.
 
-Longer version: [How it works](https://modeldiffr.netlify.app/concepts/how_it_works/).
+Longer version: [How it works](https://modeldiffr.readthedocs.io/concepts/how_it_works/).
 
 ## Layer by layer comparison
 
@@ -102,18 +102,18 @@ largest change at layer 14
 
 **Why it is needed.** Two models can score the same on every benchmark and still be different inside. A quant might lose precision in one specific layer. An "abliterated" model might keep its benchmark scores but have its refusal behavior cut out at a few layers. The layer view finds those places, and tells the more expensive tools (crosscoders and causal patching) which layer to study.
 
-Full explanation: [Layer by layer comparison](https://modeldiffr.netlify.app/concepts/layer_by_layer/).
+Full explanation: [Layer by layer comparison](https://modeldiffr.readthedocs.io/concepts/layer_by_layer/).
 
 ## What it can answer
 
 | Question | Commands | Read more |
 | --- | --- | --- |
-| Which exact models and settings were compared, and can anyone check it? | `verify` `sign` `anchor` | [Fingerprints and proof](https://modeldiffr.netlify.app/concepts/proof/) |
-| Did scores change on thirteen standard benchmarks, and is the change bigger than noise? | `audit` | [Statistics](https://modeldiffr.netlify.app/concepts/statistics/) |
-| Which layers changed, and by how much? | `layers` `directions` | [Layer by layer](https://modeldiffr.netlify.app/concepts/layer_by_layer/) |
-| Which internal features are new, lost or reshaped? | `features` | [Features](https://modeldiffr.netlify.app/concepts/representational/) |
-| Which of those layers and features actually cause the change? | `causal` | [Causal tests](https://modeldiffr.netlify.app/concepts/causal/) |
-| Is there a strange input where the derivative acts very differently? | `scan` `zoo` | [Anomaly scan](https://modeldiffr.netlify.app/concepts/anomaly/) |
+| Which exact models and settings were compared, and can anyone check it? | `verify` `sign` `anchor` | [Fingerprints and proof](https://modeldiffr.readthedocs.io/concepts/proof/) |
+| Did scores change on thirteen standard benchmarks, and is the change bigger than noise? | `audit` | [Statistics](https://modeldiffr.readthedocs.io/concepts/statistics/) |
+| Which layers changed, and by how much? | `layers` `directions` | [Layer by layer](https://modeldiffr.readthedocs.io/concepts/layer_by_layer/) |
+| Which internal features are new, lost or reshaped? | `features` | [Features](https://modeldiffr.readthedocs.io/concepts/representational/) |
+| Which of those layers and features actually cause the change? | `causal` | [Causal tests](https://modeldiffr.readthedocs.io/concepts/causal/) |
+| Is there a strange input where the derivative acts very differently? | `scan` `zoo` | [Anomaly scan](https://modeldiffr.readthedocs.io/concepts/anomaly/) |
 
 ## Install
 
@@ -131,7 +131,7 @@ pip install "modeldiffr[hf]"
 | `batch` | PyYAML | YAML batch files |
 | `all` | Everything above except vLLM and llama.cpp | |
 
-The core package has no dependencies at all, so a CI job that only reads reports stays tiny. See [Installation](https://modeldiffr.netlify.app/installation/).
+The core package has no dependencies at all, so a CI job that only reads reports stays tiny. See [Installation](https://modeldiffr.readthedocs.io/installation/).
 
 ## Quickstart
 
@@ -155,7 +155,7 @@ json:   reports/qwen/report.json
 
 How to read one line: `delta` is derivative minus base. `95% CI` is the range the true difference most likely sits in. If that range includes zero, the result is `within noise`. If it does not, the result is `CHANGED`.
 
-`report.html` is a single page you can open anywhere or attach to a pull request. `report.json` holds every question, setting and hash. Full walkthrough: [Quickstart](https://modeldiffr.netlify.app/quickstart/).
+`report.html` is a single page you can open anywhere or attach to a pull request. `report.json` holds every question, setting and hash. Full walkthrough: [Quickstart](https://modeldiffr.readthedocs.io/quickstart/).
 
 ## Common tasks
 
@@ -177,7 +177,7 @@ modeldiffr audit Qwen/Qwen2.5-1.5B-Instruct \
   --base-backend hf --suite lite
 ```
 
-See [Backends](https://modeldiffr.netlify.app/guides/backends/).
+See [Backends](https://modeldiffr.readthedocs.io/guides/backends/).
 
 ### Check someone else's report
 
@@ -186,7 +186,7 @@ modeldiffr verify report.json
 modeldiffr verify report.json --models
 ```
 
-`--models` also downloads and hashes the real model files to confirm they match. See [Verify a report](https://modeldiffr.netlify.app/guides/verify/).
+`--models` also downloads and hashes the real model files to confirm they match. See [Verify a report](https://modeldiffr.readthedocs.io/guides/verify/).
 
 ### Sign and publish
 
@@ -197,7 +197,7 @@ modeldiffr hub push audit --repo your-org/your-model
 modeldiffr registry build audits --out registry_site --key me=keys/modeldiffr.pub
 ```
 
-See [Sign and verify](https://modeldiffr.netlify.app/guides/signing/) and [Public registry](https://modeldiffr.netlify.app/guides/registry/).
+See [Sign and verify](https://modeldiffr.readthedocs.io/guides/signing/) and [Public registry](https://modeldiffr.readthedocs.io/guides/registry/).
 
 ### Look inside the model
 
@@ -225,7 +225,7 @@ steps:
       suite: lite
 ```
 
-The action runs the audit, fails the job if something changed for real, signs the report and uploads it. See [CI gate](https://modeldiffr.netlify.app/guides/ci_gate/).
+The action runs the audit, fails the job if something changed for real, signs the report and uploads it. See [CI gate](https://modeldiffr.readthedocs.io/guides/ci_gate/).
 
 ### Use it from Python
 
@@ -242,7 +242,7 @@ write_reports(result, "audit")
 print(result["verdict"])
 ```
 
-See [Python usage](https://modeldiffr.netlify.app/guides/python_usage/).
+See [Python usage](https://modeldiffr.readthedocs.io/guides/python_usage/).
 
 ## Roadmap
 
@@ -258,7 +258,7 @@ See [Python usage](https://modeldiffr.netlify.app/guides/python_usage/).
 | 0.9 | Study tables, JSON Schemas, compatibility promise, governance, paper draft |
 | 1.0 | After the public study and zoo results are published |
 
-What is still open is listed in [Roadmap: still pending](https://modeldiffr.netlify.app/roadmap/#still-pending).
+What is still open is listed in [Roadmap: still pending](https://modeldiffr.readthedocs.io/roadmap/#still-pending).
 
 ## Limitations
 
@@ -267,7 +267,7 @@ What is still open is listed in [Roadmap: still pending](https://modeldiffr.netl
 * A real change tells you something moved, not why. Features and causal shares are strong hints, not final proof.
 * The anomaly scan makes no claim about real models until its accuracy on a public zoo is published.
 
-All of them: [Limitations](https://modeldiffr.netlify.app/limitations/).
+All of them: [Limitations](https://modeldiffr.readthedocs.io/limitations/).
 
 ## Help and contact
 
@@ -281,7 +281,7 @@ All of them: [Limitations](https://modeldiffr.netlify.app/limitations/).
 
 ## Responsible use
 
-Modeldiffr only measures. It never changes model weights, and its reports say what changed and by how much, not how to copy or undo a change. If you find a serious safety problem or hidden behavior in a public model, tell its publisher privately before you post about it. See [Responsible use](https://modeldiffr.netlify.app/responsible_use/).
+Modeldiffr only measures. It never changes model weights, and its reports say what changed and by how much, not how to copy or undo a change. If you find a serious safety problem or hidden behavior in a public model, tell its publisher privately before you post about it. See [Responsible use](https://modeldiffr.readthedocs.io/responsible_use/).
 
 ## Contributing
 
