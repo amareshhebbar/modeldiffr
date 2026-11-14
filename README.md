@@ -15,7 +15,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/amareshhebbar/modeldiffr/ci.yml?branch=main&label=CI)](https://github.com/amareshhebbar/modeldiffr/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-modeldiffr.netlify.app-2D5BD7)](https://modeldiffr.readthedocs.io)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23587022.svg)](https://doi.org/10.5281/zenodo.23587022)
-[![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](LICENSE)
+[![License](https://img.shields.io/github/license/amareshhebbar/modeldiffr?color=18202B)](https://github.com/amareshhebbar/modeldiffr/blob/main/LICENSE)
 
 **[Documentation](https://modeldiffr.readthedocs.io/)** |
 [Quickstart](https://modeldiffr.readthedocs.io/quickstart/) |
@@ -167,7 +167,7 @@ modeldiffr audit BASE DERIVATIVE --suite standard --plan-only --estimate
 modeldiffr audit BASE DERIVATIVE --suite standard
 ```
 
-Covers MMLU, ARC Challenge, HellaSwag, TruthfulQA, GSM8K, MGSM, IFEval, XSTest, OR Bench, HumanEval, a long context test and output divergence. Every dataset is pinned to a fixed commit. `--plan-only --estimate` tells you how long it will take before you commit a GPU. Try it free on [Colab](notebooks/colab_lite_audit.ipynb).
+Covers MMLU, ARC Challenge, HellaSwag, TruthfulQA, GSM8K, MGSM, IFEval, XSTest, OR Bench, HumanEval, a long context test and output divergence. Every dataset is pinned to a fixed commit. `--plan-only --estimate` tells you how long it will take before you commit a GPU. Try it free on [Colab](https://github.com/amareshhebbar/modeldiffr/blob/main/notebooks/colab_lite_audit.ipynb).
 
 ### Check a quantized build
 
@@ -218,7 +218,7 @@ permissions:
   contents: read
 steps:
   - uses: actions/checkout@v4
-  - uses: amareshhebbar/modeldiffr@v0.9.3
+  - uses: amareshhebbar/modeldiffr@v0.9.4
     with:
       base: org/base_model
       derivative: ./checkpoints/candidate
@@ -276,7 +276,7 @@ All of them: [Limitations](https://modeldiffr.readthedocs.io/limitations/).
 | Something is broken | [Report a bug](https://github.com/amareshhebbar/modeldiffr/issues/new?template=bug_report.yml) |
 | A metric, suite or backend you need | [Request a feature](https://github.com/amareshhebbar/modeldiffr/issues/new?template=feature_request.yml) |
 | Questions | [GitHub Discussions](https://github.com/amareshhebbar/modeldiffr/discussions) |
-| A security issue | [Private advisory](https://github.com/amareshhebbar/modeldiffr/security/advisories/new), see [SECURITY.md](SECURITY.md) |
+| A security issue | [Private advisory](https://github.com/amareshhebbar/modeldiffr/security/advisories/new), see [SECURITY.md](https://github.com/amareshhebbar/modeldiffr/blob/main/SECURITY.md) |
 | Audits of your models, collaboration, anything else | [hebbar.gvamaresh@gmail.com](mailto:hebbar.gvamaresh@gmail.com?subject=Modeldiffr) |
 
 ## Responsible use
@@ -285,7 +285,7 @@ Modeldiffr only measures. It never changes model weights, and its reports say wh
 
 ## Contributing
 
-Everything from bug reports to new benchmark suites is welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), [GOVERNANCE.md](GOVERNANCE.md) and issues labelled `good first issue`.
+Everything from bug reports to new benchmark suites is welcome. Start with [CONTRIBUTING.md](https://github.com/amareshhebbar/modeldiffr/blob/main/CONTRIBUTING.md), [GOVERNANCE.md](https://github.com/amareshhebbar/modeldiffr/blob/main/GOVERNANCE.md) and issues labelled `good first issue`.
 
 ## Citation
 
@@ -295,7 +295,7 @@ Everything from bug reports to new benchmark suites is welcome. Start with [CONT
   title   = {Modeldiffr: auditing what changes between base and derivative language models},
   year    = {2026},
   url     = {https://github.com/amareshhebbar/modeldiffr},
-  version = {0.9.3},
+  version = {0.9.4},
   doi     = {10.5281/zenodo.23587022}
 }
 ```
@@ -306,4 +306,4 @@ The feature comparison builds on crosscoder model diffing from *Sparse Crosscode
 
 ## License
 
-[Apache 2.0](LICENSE). Copyright 2026 Amaresh Hebbar.
+[Apache 2.0](https://github.com/amareshhebbar/modeldiffr/blob/main/LICENSE). Copyright 2026 Amaresh Hebbar.
