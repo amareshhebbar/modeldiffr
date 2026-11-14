@@ -1,40 +1,108 @@
 ---
 title: Roadmap
-description: Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
+description: Every phase from preview to v1.0, what is done, and what is still pending.
 ---
 
 # Roadmap
 
-Every phase from preview to v1.0, what is shipped, and what is not claimed yet.
+Every phase from preview to v1.0, what is done, and what is still pending.
 
 ## Where we are
 
+All the code for every phase is written and tested. What is left before 1.0 is mostly **running it at scale and publishing the results**, plus a list of engineering improvements. Both are listed in [Still pending](#still-pending).
+
 | Phase | Release | Status |
 | --- | --- | --- |
-| 0. Foundation | 0.1 | Shipped |
-| 1. Trustworthy core | 0.2 | Shipped |
-| 2. Behavioral layer MVP | 0.3 | Shipped |
-| 3. Proof, signing and integrations | 0.4 | Shipped |
-| 4. Public audits and launch | 0.5 | **Tooling shipped** |
-| 5. Representational layer | 0.6 | **Shipped** |
-| 6. Causal layer | 0.7 | **Shipped** |
-| 7. Anomaly scan | 0.8 | **Shipped, rates not yet published** |
-| 8. Toward v1.0 | 0.9 | **Tooling shipped** |
-| v1.0 | 1.0 | When the exit criteria below are met |
+| 0. Foundation | 0.1 | Done |
+| 1. Trustworthy core | 0.2 | Done |
+| 2. Benchmarks | 0.3 | Done, a few extras open |
+| 3. Signing and integrations | 0.4 | Done |
+| 4. Public audits | 0.5 | **Tools done, audits not yet run and published** |
+| 5. Layer by layer and features | 0.6 | **Done, improvements open** |
+| 6. Causal tests | 0.7 | Done |
+| 7. Anomaly scan | 0.8 | **Tools done, accuracy not yet published** |
+| 8. Toward v1.0 | 0.9 | **Tools done, study and paper not yet published** |
+| v1.0 | 1.0 | When the exit goals below are met |
 
 ## What v1.0 means
 
 A developer runs one command on one GPU and gets, for any base and derivative pair from the Qwen, Llama, Gemma or Mistral families:
 
-1. What changed in capability, safety, calibration, instruction following, multilinguality and output distribution, each with a paired interval corrected for multiple comparisons.
-2. Which internal features are new, lost or shifted, with unverified labels.
-3. How much of each behavioral change those features explain.
-4. Suspicious behavior on rare inputs, with the scan's measured false positive rate next to it.
-5. A signed, content addressed proof of exactly what was compared, which anyone can check with `modeldiffr verify`.
+1. What changed in capability, safety, calibration, instruction following, other languages and output distribution, each with a paired range corrected for many metrics.
+2. Which layers changed, and which internal features are new, lost or shifted, with unverified labels.
+3. How much of each behavior change those features explain.
+4. Suspicious behavior on rare inputs, with the scan's measured false alarm rate next to it.
+5. A signed proof of exactly what was compared, which anyone can check with `modeldiffr verify`.
 
-Measured exit criteria: an identical model shows no change in 50 of 50 seeded runs; at least 95% of planted regressions above the minimum effect are found; the anomaly scan's detection and false positive rates are published on at least 20 test models; at least 25 public audits are published; a technical report is on arXiv.
+Measured exit goals:
 
-## Phase 0: Foundation (0.1, shipped)
+* Two identical models show no change in 50 of 50 seeded runs.
+* At least 95% of planted changes above the minimum size are found.
+* The anomaly scan's hit rate and false alarm rate are published on at least 20 test models.
+* At least 25 public audits are published.
+* A technical report is on arXiv.
+
+## Still pending
+
+### Blocking v1.0
+
+These need GPU time and publishing, not new code.
+
+| Item | Phase | What is needed |
+| --- | --- | --- |
+| Control study and the eleven ready audits | 4 | Run `examples/public_audits.yaml` and `examples/controls.yaml` on a GPU, sign every report, publish the registry |
+| Scale study of 25 or more popular derivatives | 8 | Pick the models, run `standard`, sign, publish with `modeldiffr study` tables |
+| Public backdoor zoo | 7 | Build 20 backdoored and 20 clean small public models, run `zoo eval`, publish the rates whatever they are |
+| Technical report on arXiv | 8 | Fill `paper/main.tex` with the study and zoo numbers, submit |
+| Launch write up | 4 | One post on the most important finding outside noise |
+| Two maintainers outside the founder | 8 | Recruit from contributors |
+
+### Layer by layer and features
+
+| Item | Why it matters |
+| --- | --- |
+| Save `layers` output as `layers.json` and `layers.html` with its own id, result hash, `verify` support and registry page | Today `layers` only prints to the terminal. Every other tool writes a verifiable file |
+| Confidence ranges per layer (bootstrap over texts) | Every other number in Modeldiffr has a range. A layer number without one cannot say whether 0.98 CKA is a real change |
+| A noise floor per layer, from comparing the base with itself in a different dtype | Tells you how much change is just precision, which matters most for quants |
+| Size of the weight change per tensor and per layer (relative norm of the difference) | The weights view says only changed or unchanged. A quant and a full fine tune both show "every tensor changed" |
+| A larger built in corpus for `layers` | The built in text is under 100 short texts. Fine for a smoke test, thin for a decision |
+| Per layer chart in the HTML pages | The pattern across layers is the main thing to read, and a table hides it |
+| Layer comparison for GGUF builds | Quants are the most common derivative, and today `layers` needs transformers on both sides |
+| Layer comparison across different tokenizers, by aligning shared text spans | Today texts that tokenize differently are skipped |
+| Pretrained crosscoders on the Hub for popular pairs | Training takes hours, and most people audit the same popular pairs |
+| Fused Triton kernel for capture and steering | Speed and memory on large models |
+
+### Causal tests
+
+| Item | Why it matters |
+| --- | --- |
+| Interventions on generation tasks with a judge | Refusal, math and instruction following are generation tasks, and causal tests cover only multiple choice today |
+| Batched interventions | Runs one sequence at a time, which is slow on large models |
+| Patching several layers together | A change spread over layers shows up only as partial shares today |
+
+### Benchmarks and backends
+
+| Item | Why it matters |
+| --- | --- |
+| Adapters for EleutherAI lm evaluation harness and UK AISI Inspect tasks | Reuse hundreds of existing tasks |
+| A default refusal classifier tested on a published labeled set, with its accuracy in every report | The keyword detector is rough |
+| Measured GPU hours per suite on common GPUs | People need cost before they commit |
+| vLLM and llama.cpp tested on real GPUs in CI | Today they are tested against stand in engines |
+| Output divergence on vLLM and API backends | These backends do not return full next token distributions, so the metric is unavailable there |
+
+### Proof
+
+| Item | Why it matters |
+| --- | --- |
+| Sigstore and EAS tested against the live services in CI | Today they are tested offline with the real libraries |
+
+### Docs
+
+| Item | Why it matters |
+| --- | --- |
+| Rewrite the reference and guide pages in the same plain style as the concept pages | Reference pages are still dense flag tables |
+
+## Phase 0: Foundation (0.1, done)
 
 * [x] Public repository, Apache 2.0 license, contribution and security policies
 * [x] Behavioral smoke suite with confidence intervals
@@ -43,9 +111,9 @@ Measured exit criteria: an identical model shows no change in 50 of 50 seeded ru
 * [x] Unit tests and CI on Python 3.10 to 3.12
 * [x] PyPI release workflow
 
-## Phase 1: Trustworthy core (0.2, shipped)
+## Phase 1: Trustworthy core (0.2, done)
 
-Every report is reproducible and provably refers to exact models.
+Every report can be repeated and provably points to exact models.
 
 * [x] Weight fingerprints: per tensor SHA 256 and a Merkle root that ignores sharding, for safetensors and PyTorch checkpoints
 * [x] Tensor level diff in every report: which tensors changed, were added or removed
@@ -62,9 +130,9 @@ Every report is reproducible and provably refers to exact models.
 
 See [Fingerprints and proof](concepts/proof.md).
 
-## Phase 2: Behavioral layer MVP (0.3, shipped)
+## Phase 2: Benchmarks (0.3, done)
 
-A behavioral audit people would use for a release decision.
+An audit good enough for a real release decision.
 
 * [x] Suite registry with pinned datasets, item hashes, and `lite`, `standard` and `full` sizes; the built in `quick` suite kept
 * [x] Tasks: MMLU, ARC Challenge, HellaSwag, TruthfulQA MC1, GSM8K, MGSM in ten languages, IFEval, XSTest safe and unsafe, OR Bench hard and toxic, HumanEval in a limited subprocess, long context needle, output divergence
@@ -82,7 +150,7 @@ A behavioral audit people would use for a release decision.
 * [ ] Measured GPU hours per suite on common GPUs, published here
 * [ ] vLLM and llama.cpp backends exercised on real hardware in CI
 
-## Phase 3: Proof, signing and integrations (0.4, shipped)
+## Phase 3: Signing and integrations (0.4, done)
 
 Audits become evidence that tools and people can check.
 
@@ -99,7 +167,7 @@ Audits become evidence that tools and people can check.
 
 See [Attestations](concepts/attestation.md).
 
-## Phase 4: Public audits and launch (0.5, tooling shipped)
+## Phase 4: Public audits (0.5, tools done)
 
 * [x] Positive controls: `modeldiffr controls make` plants identity, noise, scale, zero and pruning changes, reproducibly
 * [x] Batch audits from YAML or JSON with resume, scored controls, detection and false positive rates
@@ -111,21 +179,23 @@ See [Attestations](concepts/attestation.md).
 
 See [Positive controls](guides/controls.md), [Batch audits](guides/batch.md) and [Public registry](guides/registry.md).
 
-## Phase 5: Representational layer (0.6, shipped)
+## Phase 5: Layer by layer and features (0.6, done)
 
 * [x] Activation capture for both models on identical tokens, with skipped texts counted
-* [x] Layer statistics: linear CKA, cosine, relative change, mean shift, norm ratio (`modeldiffr layers`)
+* [x] Layer by layer statistics: linear CKA, cosine, relative change, mean shift, norm ratio (`modeldiffr layers`)
 * [x] Difference of means directions compared across models, with separation along the base direction (`modeldiffr directions`)
 * [x] BatchTopK crosscoders and the delta variant for narrow fine tunes (`modeldiffr features`)
 * [x] Features classified as shared, base only, derivative only, shifted or dead, with fixed published thresholds
 * [x] Top activating contexts and automatic labels, marked unverified, with the labeling prompt hashed into the manifest
 * [x] `features.json` with its own id, result hash and crosscoder weight hash, checked by `modeldiffr verify`, linked to an audit and shown in the registry
+* [ ] Saved, verifiable `layers.json` and `layers.html`, with confidence ranges per layer
+* [ ] Size of the weight change per tensor and per layer, not only changed or unchanged
 * [ ] Pretrained crosscoders on the Hub for popular model pairs
 * [ ] Fused Triton kernel for capture and steering
 
-See [Representational layer](concepts/representational.md).
+See [Layer by layer comparison](concepts/layer_by_layer.md) and [Features](concepts/representational.md).
 
-## Phase 6: Causal layer (0.7, shipped)
+## Phase 6: Causal tests (0.7, done)
 
 * [x] Layer patching in both directions and crosscoder feature patching, reporting the share of the behavioral change reproduced, with a bootstrap interval
 * [x] Steering checks along the mean activation difference
@@ -133,9 +203,9 @@ See [Representational layer](concepts/representational.md).
 * [x] `causal.json` with its own id and result hash, checked by `modeldiffr verify`, shown in the registry
 * [ ] Interventions on generation tasks with a judge
 
-See [Causal layer](concepts/causal.md).
+See [Causal tests](concepts/causal.md).
 
-## Phase 7: Anomaly scan (0.8, shipped)
+## Phase 7: Anomaly scan (0.8, tools done)
 
 * [x] Rare input sweep with robust z scores (`modeldiffr scan`)
 * [x] Gradient guided trigger search against a random trigger reference
@@ -146,7 +216,7 @@ See [Causal layer](concepts/causal.md).
 
 See [Anomaly scan](concepts/anomaly.md).
 
-## Phase 8: Toward v1.0 (0.9, tooling shipped)
+## Phase 8: Toward v1.0 (0.9, tools done)
 
 * [x] `modeldiffr study` turns a folder of audits into tables by derivative kind and by metric, as Markdown, CSV, LaTeX and JSON
 * [x] JSON Schemas for features, causal and scan files and for the attestation predicate, checked by `verify`
@@ -159,14 +229,14 @@ See [Anomaly scan](concepts/anomaly.md).
 
 ## v1.0
 
-Released when every measured exit criterion in [What v1.0 means](#what-v10-means) is met and published. Until then the version stays below 1.0, however complete the code is.
+Released when every exit goal in [What v1.0 means](#what-v10-means) is met and published. Until then the version stays below 1.0, however complete the code is.
 
 ## Not claimed yet
 
 !!! warning
 
-    Modeldiffr does not claim to detect backdoors or hidden behaviors in real models. The scan ships with the tools to measure its own accuracy; the claim will only be made, with its measured rates, after a zoo of 20 backdoored and 20 clean public models is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly; a signature adds accountability, not proof of honest execution.
+    Modeldiffr does not claim to find backdoors or hidden behavior in real models. The scan comes with the tools to measure its own accuracy, and the claim will only be made, with the measured rates, after a zoo of 20 backdoored and 20 clean public models is published. The quick suite is a smoke test, not a benchmark. A verified report proves consistency and the exact model files, not that the author ran the audit honestly. A signature adds accountability, not proof of honest execution.
 
 ## Acknowledgements
 
-The representational layer builds on crosscoder based model diffing, introduced in *Sparse Crosscoders for Cross Layer Features and Model Diffing* (Lindsey et al., Anthropic, 2024), and on the follow up research it inspired. Behavioral evaluation draws on open harnesses such as EleutherAI's lm evaluation harness and UK AISI's Inspect. The proof layer follows RFC 8785 and RFC 6962 and is designed to interoperate with Sigstore and OpenSSF model signing.
+The feature comparison builds on crosscoder model diffing from *Sparse Crosscoders for Cross Layer Features and Model Diffing* (Lindsey et al., Anthropic, 2024) and the research that followed it. The benchmark side learns from EleutherAI's lm evaluation harness and UK AISI's Inspect. The proof side follows RFC 8785 and RFC 6962 and works with Sigstore and OpenSSF model signing.

@@ -1,56 +1,59 @@
 ---
 title: Limitations
-description: What Modeldiffr does not do, layer by layer, stated plainly.
+description: What Modeldiffr does not do, stated plainly.
 ---
 
 # Limitations
 
-What Modeldiffr does not do, layer by layer, stated plainly.
+What Modeldiffr does not do, stated plainly.
 
 !!! warning
 
-    The built in `quick` suite is a smoke test that catches large regressions. Use `lite`, `standard` or `full` for a release decision. The anomaly scan makes no claim about real models until its rates on a public zoo are published.
+    The built in `quick` suite is a smoke test that only catches big drops. Use `lite`, `standard` or `full` for a real decision. The anomaly scan makes no claim about real models until its accuracy on a public zoo is published.
 
 ## Statistics
 
-* A metric reported as within noise means no evidence of change at this resolution, not proof of no change. Check the detectable change in the plan, or run `modeldiffr power`.
-* Power estimates assume a correlation of 0.5 between the two models' per item results.
-* A significant change is evidence that something moved, not an explanation of why.
+* "Within noise" means no evidence of a change at this sample size. It does not prove nothing changed. Check the smallest detectable change in the plan, or run `modeldiffr power`.
+* The power estimate assumes the two models' per question results are correlated at 0.5.
+* A real change shows that something moved, not why.
 
 ## Benchmarks and backends
 
-* Both models are held in memory at once. Two 7B models in bfloat16 need roughly 28 GB of accelerator memory before activations.
-* The vLLM and llama.cpp backends are tested in CI against stand in engines, not real GPUs. Please report anything that behaves differently on real hardware.
-* Hosted APIs rarely return prompt log probabilities, so multiple choice tasks need the `hf`, `vllm` or `llamacpp` backends or a vLLM server.
-* The default refusal detector is keyword based. Measure it, or a classifier, on your own labeled responses with `modeldiffr refusal-eval` before relying on refusal metrics.
-* IFEval checks are reimplemented and strict only; `language:response_language` needs `langdetect`.
-* `humaneval` runs model written code with resource limits but without network isolation.
-* `output_divergence_kl` needs identical vocabularies; cross family pairs skip it with a note.
-* A base model without a chat template is compared with its instruct derivative through one shared template when the tokenizers match; otherwise part of the difference is the prompt format, and the report says so under comparability.
+* Both models are in memory at the same time. Two 7B models in bfloat16 need about 28 GB of GPU memory before activations.
+* The vLLM and llama.cpp backends are tested in CI against stand in engines, not real GPUs. Please report anything that acts differently on real hardware.
+* Hosted APIs rarely return prompt log probabilities, so multiple choice tasks need the `hf`, `vllm` or `llamacpp` backends, or a vLLM server.
+* The default refusal detector uses keywords. Measure it, or a classifier, on your own labeled replies with `modeldiffr refusal-eval` before you rely on refusal metrics.
+* IFEval checks are reimplemented and strict only. `language:response_language` needs `langdetect`.
+* `humaneval` runs code the model wrote, with resource limits but without network isolation.
+* `output_divergence_kl` needs the same vocabulary in both models. Pairs from different families skip it with a note.
+* A base model without a chat template is compared with its instruct version through one shared template when the tokenizers match. Otherwise part of the difference is the prompt format, and the report says so.
 
 ## Proof
 
-* A report that passes `modeldiffr verify` is internally consistent and tied to exact model files. It does not prove the audit was run as recorded. A signature says who vouches for it; a timestamp says when; rerunning the audit is the only way to check the results themselves.
+* A report that passes `verify` is consistent and tied to exact model files. It does not prove the audit was really run. A signature says who vouches for it, a timestamp says when, and rerunning is the only way to check the results themselves.
 * Rerunning on different hardware can change log probabilities in the last digits, so `results_root` can differ while `audit_id` stays the same.
-* Fingerprinting reads every weight file once. `--no-weight-hash` skips it for very large models, and the report then says so.
-* Sigstore and the Ethereum Attestation Service are tested against their real client libraries offline; the live services are not called in CI.
-* Between a safetensors model and a GGUF build there is no tensor level diff, because names and encodings differ.
+* Fingerprinting reads every weight file once. `--no-weight-hash` skips that for very large models, and the report says so.
+* Sigstore and the Ethereum Attestation Service are tested with their real client libraries offline. The live services are not called in CI.
+* A safetensors model and a GGUF build have no tensor level diff, because their tensor names and encodings differ.
 
-## Representational and causal layers
+## Layer by layer, features and causal tests
 
-* They need the transformers backend and the same tokenizer in both models.
-* A crosscoder sees one layer, and finds only features the corpus exercises.
-* Feature classes come from fixed thresholds on decoder norms; features near a threshold could fall either way.
+* They need the transformers backend and the same tokenizer in both models. GGUF builds are not supported here yet.
+* The weights view says whether a tensor changed, not by how much.
+* `layers` results have no confidence ranges yet, and are not saved as a verifiable file.
+* Results describe only the text you give. Pick a corpus close to what the derivative was trained on.
+* A crosscoder sees one layer, and finds only features the corpus triggers.
+* Feature classes come from fixed thresholds. Features near a threshold could fall either way.
 * Labels are written by a language model and are unverified.
-* Causal shares are measured on multiple choice items only, one layer at a time.
-* Crosscoder training is deterministic on the CPU for a seed; on a GPU two runs can differ slightly, so publish `crosscoder.safetensors`.
+* Causal shares use multiple choice questions only, one layer at a time.
+* Crosscoder training is exact for a seed on CPU. On GPU two runs can differ slightly, so publish `crosscoder.safetensors`.
 
 ## Anomaly scan
 
-* A flag is a lead to investigate. Fine tunes legitimately change behavior on some inputs.
-* No flag does not show that a model is free of hidden behavior. Triggers longer than the search length, or behavior that needs a multi turn context, are outside what the scan tries.
-* Rates measured on a zoo of small models with simple triggers do not transfer automatically to large models or to triggers designed to evade the scan.
+* A flag is a lead to look into. Fine tunes change behavior on some inputs on purpose.
+* No flag does not prove a model is clean. Triggers longer than the search length, or behavior that needs several chat turns, are outside what the scan tries.
+* Rates measured on a zoo of small models with simple triggers do not automatically carry over to large models or to triggers built to avoid the scan.
 
 ## Formats
 
-* Report schema 0.3 is the 1.0 candidate. Until 1.0, formats may still change; older reports always keep verifying. See [Schemas and compatibility](reference/compatibility.md).
+* Report schema 0.3 is the 1.0 candidate. Until 1.0 the formats may still change. Older reports always keep verifying. See [Schemas and compatibility](reference/compatibility.md).
