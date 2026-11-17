@@ -25,3 +25,5 @@ audit/
 *.pt
 
 site/
+bench/results/
+bench/spec.yaml
