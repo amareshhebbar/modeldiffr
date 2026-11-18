@@ -44,6 +44,8 @@ def generate(
             texts = [backend.generate_raw(r, max_new_tokens) for r in rendered]
     elif hasattr(backend, "generate_batch"):
         texts = list(backend.generate_batch(prompts, max_new_tokens))
+    elif hasattr(backend, "generate_raw_batch") and all(r is not None for r in rendered):
+        texts = list(backend.generate_raw_batch(rendered, max_new_tokens))
     else:
         texts = [backend.generate(p, max_new_tokens) for p in prompts]
     return [(truncate(t, stop), text_hash(r)) for t, r in zip(texts, rendered, strict=True)]
