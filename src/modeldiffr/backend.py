@@ -1,4 +1,5 @@
 import hashlib
+import os
 from typing import Protocol
 
 
@@ -151,8 +152,9 @@ class HFBackend:
         return getattr(self.model.config, "max_position_embeddings", None)
 
     def choice_logprobs_batch(
-        self, pairs: list[tuple[str, str]], batch_size: int = 16
+        self, pairs: list[tuple[str, str]], batch_size: int | None = None
     ) -> list[float]:
+        batch_size = batch_size or int(os.environ.get("MODELDIFFR_SCORE_BATCH", 32))
         torch = self._torch
         encoded = []
         for prompt, continuation in pairs:
@@ -208,8 +210,9 @@ class HFBackend:
             torch.cuda.empty_cache()
 
     def generate_raw_batch(
-        self, texts: list[str], max_new_tokens: int, batch_size: int = 8
+        self, texts: list[str], max_new_tokens: int, batch_size: int | None = None
     ) -> list[str]:
+        batch_size = batch_size or int(os.environ.get("MODELDIFFR_GEN_BATCH", 32))
         torch = self._torch
         out = [""] * len(texts)
         order = sorted(range(len(texts)), key=lambda i: len(texts[i]))

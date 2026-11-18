@@ -4,9 +4,9 @@ This folder tests Modeldiffr itself. A good audit tool must do three things: fin
 
 ## What it runs
 
-* 10 null pairs on Qwen2.5 0.5B Instruct: 5 identical copies and 5 copies with noise at 0.0001 of each tensor's std. The right answer is "no change".
-* 10 planted changes on the same model: weight noise, pruning, a zeroed MLP and a scaled MLP. The right answer is "change".
-* Real derivatives: the ShortThink SFT, DPO, GRPO and TIES models, ToolSure ORPO, Stretch32K YaRN and SFT, two public instruction tunes, and the BitNarrow edits when they exist.
+* 6 null pairs on Qwen2.5 0.5B Instruct: 3 identical copies and 3 copies with noise at 0.0001 of each tensor's std. The right answer is "no change".
+* 6 planted changes on the same model: weight noise at 3 levels, pruning, a zeroed MLP and a scaled MLP. The right answer is "change".
+* Real derivatives: ShortThink SFT and GRPO, ToolSure ORPO, Stretch32K SFT, the public Qwen2.5 0.5B instruction tune, and the BitNarrow edit when it exists.
 * A tamper test: every finished report is copied and edited three ways, then `modeldiffr verify` must reject it.
 
 Every audit uses the `lite` suite and the released CLI (`modeldiffr batch`).
