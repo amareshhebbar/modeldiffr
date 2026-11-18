@@ -313,5 +313,9 @@ class HFBackend:
         q = other._logprobs(text).to(p.device)
         vocab = min(p.shape[-1], q.shape[-1])
         p, q = p[:, :vocab], q[:, :vocab]
-        kl = (p.exp() * (p - q)).sum(dim=-1)
-        return float(torch.clamp(kl, min=0.0).mean())
+        from modeldiffr.tasks.divergence import KL_CAP
+
+        prob = p.exp()
+        term = torch.where(prob > 0, prob * (p - q.clamp(min=-1e4)), torch.zeros_like(prob))
+        kl = torch.nan_to_num(term.sum(dim=-1), nan=KL_CAP, posinf=KL_CAP, neginf=0.0)
+        return float(torch.clamp(kl, min=0.0, max=KL_CAP).mean())

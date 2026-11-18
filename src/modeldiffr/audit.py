@@ -1,3 +1,4 @@
+import math
 import platform
 import time
 from collections.abc import Callable
@@ -219,6 +220,12 @@ def run_audit(
             items_out[task.name] = {"base": b, "derivative": d}
         specs += [m.to_dict() for m in task.metrics]
 
+    items_out, replaced = finite_items(items_out)
+    if replaced:
+        notes.append(
+            f"Replaced {replaced} non finite values (NaN or infinity) from model outputs: "
+            "KL counts as the cap, scores and confidences count as 0, other fields become null."
+        )
     metrics = compute_metrics(items_out, specs, seed=seed, n_resamples=n_resamples, q=fdr_q)
     weights_diff = None
     bw = (base_fp or {}).get("weights") or {}
@@ -265,3 +272,29 @@ def metrics_from_items(
     items: dict, specs: list[dict], seed: int, n_resamples: int, q: float = FDR_Q
 ):
     return compute_metrics(items, specs, seed=seed, n_resamples=n_resamples, q=q)
+
+
+ZERO_FIELDS = {"score", "correct", "confidence"}
+
+
+def finite_items(value, key=None):
+    if isinstance(value, float) and not math.isfinite(value):
+        if key == "kl":
+            from modeldiffr.tasks.divergence import KL_CAP
+
+            return KL_CAP, 1
+        return (0.0 if key in ZERO_FIELDS else None), 1
+    if isinstance(value, dict):
+        out, n = {}, 0
+        for k, v in value.items():
+            out[k], c = finite_items(v, k)
+            n += c
+        return out, n
+    if isinstance(value, list):
+        out, n = [], 0
+        for v in value:
+            x, c = finite_items(v, key)
+            out.append(x)
+            n += c
+        return out, n
+    return value, 0

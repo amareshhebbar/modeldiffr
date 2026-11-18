@@ -54,6 +54,9 @@ class DivergenceTask(Task):
         return {"loglik": n, "generate": 0, "tokens": 0}
 
 
+KL_CAP = 50.0
+
+
 def divergence_metric(task="divergence"):
     return (
         MetricSpec(
@@ -78,5 +81,8 @@ def generic_kl(base, derivative, text: str) -> float | None:
         return None
     v = min(p.shape[-1], q.shape[-1])
     p, q = np.asarray(p, dtype=np.float64)[:, :v], np.asarray(q, dtype=np.float64)[:, :v]
-    kl = (np.exp(p) * (p - q)).sum(axis=-1)
-    return float(np.clip(kl, 0, None).mean())
+    prob = np.exp(p)
+    with np.errstate(invalid="ignore", over="ignore"):
+        term = np.where(prob > 0, prob * (p - np.maximum(q, -1e4)), 0.0)
+    kl = np.nan_to_num(term.sum(axis=-1), nan=KL_CAP, posinf=KL_CAP, neginf=0.0)
+    return float(np.clip(kl, 0, KL_CAP).mean())
